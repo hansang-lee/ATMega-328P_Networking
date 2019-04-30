@@ -14,7 +14,7 @@ unsigned char uart_receive(void);
 /* Interrupt */
 void setup();
 
-char sharedTimer=0;
+int sharedTimer=0;
 ISR(TIMER0_OVF_vect)
 {
     TCNT0 = 209;    // TCNT0 Register Initialization
@@ -25,9 +25,8 @@ ISR(TIMER0_OVF_vect)
                     // TCNT0 init no.: 256 - 47 = 209
 
     sharedTimer++;
-
     if(sharedTimer > 1000)
-        uart_transmit(sharedTimer);
+        uart_transmit('I');
 }
 
 int main()
@@ -52,9 +51,12 @@ void setup()
      * 0       1
      * 1       0
      * 1       1*/
-    TCCR0A &= ~(1 << WGM00);
-    TCCR0A &= ~(1 << WGM01);
-    TCCR0B = 0xD1;
+    //TCCR0A &= ~(1 << WGM00);
+    //TCCR0A &= ~(1 << WGM01);
+    
+    /* Prescaler: Timer/Counter Control Register */
+    // Set prescaler to 256 and start the timer
+    TCCR0B |= (1 << CS02);
     
     /* Set the ISR OVF vect */
     /* OCIE0, OCIE2 -
@@ -63,10 +65,6 @@ void setup()
     
     /* Turn on global interrupts */
     sei();
-
-    /* Prescaler: Timer/Counter Control Register */
-    // Set prescaler to 256 and start the timer
-    TCCR0B |= (1 << CS02);
 }
 
 void uart_transmit(unsigned char data)
