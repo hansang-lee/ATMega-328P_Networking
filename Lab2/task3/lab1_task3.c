@@ -26,7 +26,12 @@ ISR(TIMER0_OVF_vect)
 
     sharedTimer++;
     if(sharedTimer > 1000)
+    {
         uart_transmit('I');
+        uart_transmit('\r');
+        uart_transmit('\n');
+        sharedTimer = 0;
+    }
 }
 
 int main()
@@ -45,25 +50,15 @@ int main()
 
 void setup()
 {
-    /* Prescaler: Timer/Counter Control Register */
-    /* WGM01 | WGM00
-     * 0       0
-     * 0       1
-     * 1       0
-     * 1       1*/
-    //TCCR0A &= ~(1 << WGM00);
-    //TCCR0A &= ~(1 << WGM01);
-    
-    /* Prescaler: Timer/Counter Control Register */
-    // Set prescaler to 256 and start the timer
+    /* Prescaler */
+    /* "TCCR0B" Timer/Counter Control Register */
+    /* "CS02" Set prescaler to 256 */ 
     TCCR0B |= (1 << CS02);
     
-    /* Set the ISR OVF vect */
-    /* OCIE0, OCIE2 -
-     * TOIE0, TOIE2 - Overflow */
+    /* "TOIE0, TOIE2" Set "ISR OVF vect"(Overflow) */
     TIMSK0 |= (1 << TOIE0);
     
-    /* Turn on global interrupts */
+    /* "ISR" Global Interrupts On */
     sei();
 }
 
