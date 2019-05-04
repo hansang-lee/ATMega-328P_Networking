@@ -42,6 +42,16 @@ http://www.ijon.de/comp/tutorials/makefile.html#targets
 ATmega328P Example \
 https://github.com/tilaktilak/atmega328P/blob/master/makefile
 
+ATmega128 Timer Counter Example (Kor.) \
+http://blog.naver.com/PostView.nhn?blogId=gjs1029&logNo=221120105935&parentCategoryNo=&categoryNo=32&viewDate=&isShowPopularPosts=true&from=search
+
+ATmega328 Timer/Interrupt \
+https://sites.google.com/site/qeewiki/books/avr-guide/timers-on-the-atmega328 \
+https://courses.cs.washington.edu/courses/csep567/10wi/lectures/Lecture7.pdf
+
+Pin Changes Example Video \
+https://www.youtube.com/watch?v=w37FOUrXO6s
+
 
 # Makefile
  Compliling by hand is a laborious task, but there is an easy way to automate it. The source files can be very comfortably compiled automatically and also programmed to the microcontroller by using the make tool.
