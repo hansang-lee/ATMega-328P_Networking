@@ -29,7 +29,7 @@ ISR(TIMER0_OVF_vect)
                     // Period: 1 / 46875 = 0.00002133s = 21.33us            
                     // Event executed at every "1ms": 21.33us / 46.88...(47)
                     // TCNT0 init no.: 256 - 47 = 209
-
+                    //
     sharedTimer++;
     if(sharedTimer > 100)
     {
@@ -46,6 +46,7 @@ ISR(PCINT2_vect)
 int main()
 {
     /* Set pin outputs */
+    // "UDRn" USART I/O Data Register- reads Data at I/O Location
     DDRB |= (1 << PB5); // LED pin
     DDRB |= (1 << PB1); // Signal pin
     
