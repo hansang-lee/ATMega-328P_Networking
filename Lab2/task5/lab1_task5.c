@@ -7,10 +7,12 @@
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
 
-#define _PERIOD_        1000
+#define _PERIOD_        500
 #define _LED_A_TOGGLE_  (PORTB ^= (1 << PB5))
 #define _LED_B_TOGGLE_  (PORTB ^= (1 << PB4))
 #define _PIN_CHANGE_    (PORTB ^= (1 << PB1))
+#define _DATA_SEND_     (PORTB ^= (1 << PB2))
+#define _DATA_RECEIVE_  (PIND & (1 << PD4))
 
 /* UART serial communication */
 void uart_init(unsigned long);
@@ -22,37 +24,31 @@ void interrupt_setup();
 void pin_change_setup();
 
 /* Buffers */
-volatile unsigned char tmpBuffer[5] = "Hello";
-volatile unsigned char sendBuffer = '0';
-volatile unsigned char receiveBuffer= '0';
+volatile unsigned char message[5] = "Hello";
+volatile unsigned char receiveBuffer = '\0';
 
-/* Interrupt A - Data Transmitter (Layer 2) */
+/* Interrupt A */
 ISR(TIMER0_COMPA_vect)
 {
     static volatile unsigned int timerA = (_PERIOD_/2);
     timerA++;
     if(timerA > _PERIOD_)
     {
-        /* To Do */
-        sendBuffer = 'A';
-        _PIN_CHANGE_;
-
+        _LED_A_TOGGLE_;
+        _DATA_SEND_;
         timerA = 0;
     }
 }
 
-/* Interrupt B - Data Receiver (Layer 2) */
+/* Interrupt B */
 ISR(TIMER0_COMPB_vect)
 {
     static volatile unsigned int timerB = 0;
     timerB++;
     if(timerB > _PERIOD_)
     {
-        /* To Do */
-        receiveBuffer = sendBuffer;
-        sendBuffer = '0';
-
-
+        _LED_B_TOGGLE_;
+        _PIN_CHANGE_;
         timerB = 0;
     }
 }
@@ -60,18 +56,24 @@ ISR(TIMER0_COMPB_vect)
 /* Pin Change - Data Carrier */
 ISR(PCINT2_vect)
 {
-    
+        if((PIND & (1 << PD4)))
+            receiveBuffer = '1';
+        else 
+            receiveBuffer = '0';
+        uart_transmit(receiveBuffer);
 }
 
-/* *********************************************************************************
+/**********************************************************************************
  * Main */
 int main()
 {
     /* Set pin outputs */
-    DDRB |= (1 << PB5);
-    DDRB |= (1 << PB4);
-    DDRB |= (1 << PB1);
-    DDRD |= (1 << PD1);
+    DDRB |= (1 << DDB5);
+    DDRB |= (1 << DDB4);
+    DDRB |= (1 << DDB1); // PD3 - Pin Change
+    DDRB |= (1 << DDB2); // PD4 - Data
+    DDRD &= ~(1 << DDD3); //
+    DDRD &= ~(1 << DDD4); //
 
     /* Initialization */
     cli();
@@ -82,16 +84,12 @@ int main()
 
     for(;;)
     {
-        for(int i=0; i<10; i++)
-        {
-            uart_transmit('A');
-            _delay_ms(100);
-        }
-            uart_transmit('\r');
-            uart_transmit('\n');
+        _delay_ms(10000);
+        uart_transmit('\r');
+        uart_transmit('\n');
     }
 }
-/* *********************************************************************************/
+/**********************************************************************************/
 
 void interrupt_setup()
 {
@@ -105,10 +103,9 @@ void interrupt_setup()
 void pin_change_setup()
 {
     /* "PCMSK[2;0]" Pin Change Mask Register
-     * "PCINT17 bit" corresponds to "PD1 pin"
-     * "PCINT18 bit" corresponds to "PD2 pin" */
-    PCMSK2 |= (1 << PCINT17);
-    //PCMSK2 |= (1 << PCINT18);
+     * "PCINT19 bit" corresponds to "PD3 pin"
+     * "PCINT20 bit" corresponds to "PD4 pin" */
+    PCMSK2 |= (1 << PCINT19);
     
     /* if "PCINT[23;0]" is set, and the "PCIE[2;0]" bit in "PCICR" is set, 
      * pin change enabled */
@@ -128,7 +125,6 @@ unsigned char uart_receive()
     while(!(UCSR0A & (1 << RXC0)));
     return UDR0;
 }
-
 
 void uart_init(unsigned long ubrr)
 {
