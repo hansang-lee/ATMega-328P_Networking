@@ -6,12 +6,9 @@
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
 
-#define _PERIOD_        1000
-#define _LED_A_TOGGLE_  (PORTB ^= (1 << PB5))
-#define _LED_B_TOGGLE_  (PORTB ^= (1 << PB4))
-#define _PIN_CHANGE_    (PORTB ^= (1 << PB1))
-#define _DATA_SEND_     (PORTB ^= (1 << PB2))
-#define _RECEIVED_DATA_  (PIND & (1 << PD4))
+#define _PERIOD_	1000
+#define _PIN_CHANGE_	(PORTB ^= (1 << PB1))
+#define _LED_TOGGLE_	(PORTB ^= (1 << PB5))
 
 /* UART serial communication */
 void uart_init(unsigned long);
@@ -19,91 +16,66 @@ void uart_transmit(unsigned char);
 unsigned char uart_receive(void);
 
 /* Interrupt */
-void interrupt_setup();
+void interrupts_setup();
 void pin_change_setup();
 
 /* Initialization */
 void io_init();
 
-/* Buffers */
-volatile unsigned char receiveBuffer = '\0';
-
-/* Interrupt A - Data Transmitter */
+/* Interrupt - Pin Chaning */
 ISR(TIMER0_COMPA_vect)
 {
-	static volatile unsigned int timerA = (_PERIOD_ / 2);
-	timerA++;
-	if (timerA > _PERIOD_)
+	static volatile unsigned int sharedTimer = 0;
+	sharedTimer++;
+	if (sharedTimer > _PERIOD_)
 	{
-		_LED_A_TOGGLE_;
-		_DATA_SEND_;
-		timerA = 0;
-	}
-}
-
-/* Interrupt B - Clock Signal */
-ISR(TIMER0_COMPB_vect)
-{
-	static volatile unsigned int timerB = 0;
-	timerB++;
-	if (timerB > _PERIOD_)
-	{
-		_LED_B_TOGGLE_;
 		_PIN_CHANGE_;
-		timerB = 0;
+		sharedTimer = 0;
 	}
 }
 
-/* Pin Change - Data Carrier */
+/* Pin Change - Toggling LED */
 ISR(PCINT2_vect)
 {
-	//if ((PIND & (1 << PD4)))
-	if (_RECEIVED_DATA_ == 1)
-		receiveBuffer = '1';
-	else
-		receiveBuffer = '0';
-	uart_transmit(receiveBuffer);
+	_LED_TOGGLE_;
 }
 
-/**********************************************************************************
- * Main */
+/********************************************************************************
+ * Clock Signal should be sent from "PB1"
+ * Indicate the receiving of a clock signal on "PD3" by using the Gertboard LEDs
+ *
+ * <Note>
+ * Use the ATMel documentation to learn about the possibilities of a pin-change interrupt
+ * handler.
+ ********************************************************************************/
 int main()
 {
 	io_init();
 	cli();
-	uart_init(MYUBRR);
-	interrupt_setup();
+	//uart_init(MYUBRR);
+	interrupts_setup();
 	pin_change_setup();
 	sei();
 
 	for (;;)
 	{
-		_delay_ms(10000);
-		uart_transmit('\r');
-		uart_transmit('\n');
+
 	}
 }
-/**********************************************************************************/
 
 void io_init()
 {
 	/* LED */
 	DDRB |= (1 << DDB5);
-	DDRB |= (1 << DDB4);
 
-	/* Pin Change - Sending Clock Signal */
+	/* Pin Change - Toggling LED */
 	DDRB |= (1 << DDB1); // Output
 	DDRD &= ~(1 << DDD3); // Input
-
-	/* Sending Data */
-	DDRB |= (1 << DDB2); // Output(Data Send)
-	DDRD &= ~(1 << DDD4); // Input(Data Receive)
 }
 
-void interrupt_setup()
+void interrupts_setup()
 {
 	TIMSK0 |= (1 << OCIE0A);    // Interrupt TimerCounter0 Compare Match A
-	TIMSK0 |= (1 << OCIE0B);    // Interrupt TimerCounter0 Compare Match B
 	TCCR0A |= (1 << WGM01);     // CTC Mode
 	TCCR0B |= (1 << CS02);      // Clock/256 = 46875
 	OCR0A = 0x2f;               // 1/46875*47 = 0.001 seconds per tick
