@@ -61,8 +61,7 @@ ISR(TIMER0_COMPB_vect)
 /* Pin Change - Data Carrier */
 ISR(PCINT2_vect)
 {
-	//if ((PIND & (1 << PD4)))
-	if (_RECEIVED_DATA_ == 1)
+	if (_RECEIVED_DATA_)
 		receiveBuffer = '1';
 	else
 		receiveBuffer = '0';

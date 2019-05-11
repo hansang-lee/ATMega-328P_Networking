@@ -3,8 +3,8 @@
 # /dev/ttyAMA0		: UART-PORT
 # gpio				: GPIO Programmer
 MCU			= atmega328p
-TARGET 		= lab2_test3
-SOURCES		= lab2_task3.c
+TARGET 		= lab2_task6
+SOURCES		= lab2_task6.c
 PROGRAMMER	= gpio
 PORT 		= /dev/ttyAMA0
 BAUD 		= 9600
