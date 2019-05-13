@@ -51,7 +51,3 @@ https://courses.cs.washington.edu/courses/csep567/10wi/lectures/Lecture7.pdf
 
 Pin Changes Example Video \
 https://www.youtube.com/watch?v=w37FOUrXO6s
-
-
-# Makefile
- Compliling by hand is a laborious task, but there is an easy way to automate it. The source files can be very comfortably compiled automatically and also programmed to the microcontroller by using the make tool.
