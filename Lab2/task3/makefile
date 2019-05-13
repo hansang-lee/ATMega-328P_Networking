@@ -3,7 +3,7 @@
 # /dev/ttyAMA0		: UART-PORT
 # gpio				: GPIO Programmer
 MCU			= atmega328p
-TARGET 		= lab2_test3
+TARGET 		= lab2_task3
 SOURCES		= lab2_task3.c
 PROGRAMMER	= gpio
 PORT 		= /dev/ttyAMA0
