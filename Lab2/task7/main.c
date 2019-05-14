@@ -1,10 +1,7 @@
-#include "io.c"
-#include "interrupt.c"
+#include "init.h"
+#include "lab2_task7.h"
 
 /********************************************************************************
- * TASK 2-4 : SENDING DATA with CRC32
- * 			: INTERRUPT COMPA/COMPB, PIN CHANGE INTERRUPT 
- * 
  * "Scenario"
  * -
  * -
@@ -14,8 +11,8 @@
  * 
  * "Data Frame Format"
  * 1 Bytes      - Preamble  "01111110"
- * 4 Bytes      - CRC32     "xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx"
- * 0-2008 Bytes - Payload   "xxxxxxxx ..."
+ * 33 Bits      - CRC32     "x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx"
+ * 6 Bytes 		- Payload   "xxxxxxxx ..."
  ********************************************************************************/
 int main()
 {

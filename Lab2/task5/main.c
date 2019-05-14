@@ -2,8 +2,10 @@
 #include "interrupt.c"
 
 /********************************************************************************
+ * TASK 2-4 : SENDING DATA
+ * 			: INTERRUPT COMPA/COMPB, PIN CHANGE INTERRUPT 
+ * 
  * <Q> Try to modify the clock frequency of the communication. What happens?
- *
  * <Q> What happens in your implementation when there is no data to send?
  *
  * <Note>
