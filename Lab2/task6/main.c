@@ -1,5 +1,6 @@
 #include "io.c"
 #include "interrupt.c"
+#include <util/delay.h>
 
 /********************************************************************************
  * TASK 2-4 : SENDING DATA with CRC32

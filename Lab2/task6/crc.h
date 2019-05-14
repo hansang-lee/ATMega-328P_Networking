@@ -1,78 +1,70 @@
-#include <stdbool.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 
-#define _SIZE_OF_PAYLOAD_   4
-#define _PREAMBLE_          0b01111110
-#define _POLINOMIAL_        0b100000100110000010001110110110111
+#define NO_ERROR        0
+#define ERROR_OCCUR     1
 
-//********************************************************************
-/* Data Frame Format */
-//********************************************************************
-volatile typedef struct data_frame_t
+#define TRUE            0
+#define FALSE           1
+
+#define PREAMBLE        0x7e        // 8 Bits
+#define DIVIDER         0b1011 //0x104C11DB7  // 33 Bits
+#define MESSAGE         0b11010011101100 //0xffff      // 8 Bits
+
+/******************************************************/
+/* Data Frame */
+/******************************************************/
+typedef struct data_frame_t
 {
-    unsigned char preamble;
-    unsigned char crc32[4];
-    unsigned char payload[_SIZE_OF_PAYLOAD_];
-}frame_t;
+    unsigned int crc32;             // 0-31
+    unsigned char size;             // 32-39
+    unsigned char payload[2008];    // 40-2048
+} frame_t;
 
-//********************************************************************
-/* CRC Functions */
-//********************************************************************
-// Transmitter
-void set_preamble(frame_t* frame);
-void set_payload(frame_t* frame, char payload[], int length);
-void set_crc32(frame_t* frame);
-
-// Receiver
-bool check_preamble(frame_t* frame);
-bool check_crc(frame_t* frame);
-
-//********************************************************************
-/* Implementations */
-//********************************************************************
-void set_preamble(frame_t* frame)
+/******************************************************/
+/* Receiver Functions */
+/******************************************************/
+unsigned int read_bit(const unsigned char bitstring, const int pos)
 {
-	frame->preamble = _PREAMBLE_;
+    if((bitstring & (0b10000000 >> pos)))
+            return 1;
+    else
+        return 0;
 }
 
-void set_payload(frame_t* frame, char payload[], int length)
+void update_preamble_buffer(unsigned char* buffer)
 {
-	for(int i=0; i<length; i++)
-	{
-		frame->payload[i] = payload[i];
-	}
+    /* STEP1. Discards the MSB */
+    *buffer &= 0x7f;
+
+    /* STEP2. Left Shift */
+    *buffer <<= 1;
+
+    /* STEP3. Inserts a new LSB */
+    //preambleBuffer += ((0x01) & (PIND & (1 << PD4)));
+    if(_RECEIVED_DATA_)
+        *buffer += 1;
+    else
+        *buffer += 0;
 }
 
-void set_crc32(frame_t* frame)
+unsigned int check_preamble(const unsigned char preambleBuffer)
 {
-	int upperbound = ((_SIZE_OF_PAYLOAD_ * 8) -1);
-	
+    if((preambleBuffer ^ PREAMBLE) == 0)
+        return NO_ERROR;
+    return ERROR_OCCUR;
 }
 
-bool check_preamble(frame_t frame)
+void print_buffer(const unsigned char buffer)
 {
-    if(_PREAMBLE_ & preamble)
-        return true;
-    return false;
-}
-
-bool check_crc(frame_t* frame)
-{
-    // STEP. DIVIDOR = _POLINOMIAL_
-    // STEP. DIVIDEE = (DATA << 32)
-    //
-    // STEP. LOOP INITIAL VALUE = (_POLINOMIAL_ << ((_SIZE_OF_PAYLOAD_ * 8) - 1))
-    // STEP. LOOP UPPERBOUND = ((_SIZE_OF_PAYLOAD_ * 8) - 1))
-    // STEP. LOOP CONDITION =
-    // 
-    // UPPERBOUND = ((_SIZE_OF_PAYLOAD_ * 8) - 1);
-    // DIVIDOR = (_POLINOMIAL_ << UPPERBOUND);
-    // DIVIDEE = (PAYLOAD << 32);
-    // for(int i=0; i<UPPERBOUND; i++)
-    // {
-    //     DIVIDEE ^= DIVIDOR;
-    //     DIVIDOR >> 1;
-    // }
-    // TRANSMIT_DATA = (DATA << 31) -
-    //
-    // STEP. Generate Remainder
+    for(int i=0; i<8; i++)
+    {
+        if(buffer & (0b10000000 >> i))
+            uart_transmit('1');
+        else
+            uart_transmit('0');
+    }
+    uart_transmit('\r');
+    uart_transmit('\n');
 }
