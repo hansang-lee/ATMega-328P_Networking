@@ -8,6 +8,7 @@
 void uart_init(unsigned long);
 void uart_transmit(unsigned char);
 unsigned char uart_receive(void);
+void uart_changeLine();
 
 void uart_transmit(unsigned char data)
 {
@@ -31,4 +32,10 @@ void uart_init(unsigned long ubrr)
 
 	UCSR0C |= (1 << USBS0);
 	UCSR0C |= (3 << UCSZ00);
+}
+
+void uart_changeLine()
+{
+    uart_transmit('\r');
+    uart_transmit('\n');
 }

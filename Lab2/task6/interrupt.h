@@ -9,6 +9,10 @@
 #define _SEND_LOGICAL_0_    (PORTB &= ~(1 << PB2))
 #define _RECEIVED_DATA_     (PIND & (1 << PD4))
 
+#define FLAG_DETECTING_PREAMBLE 0
+#define FLAG_CHECKING_CRC       1
+#define FLAG_READING_DATA       2
+
 /* Interrupt */
 void interrupt_setup();
 void pin_change_setup();

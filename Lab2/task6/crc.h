@@ -8,9 +8,9 @@
 #define TRUE            0
 #define FALSE           1
 
-#define PREAMBLE        0x7e        // 8 Bits
-#define DIVIDER         0b1011 //0x104C11DB7  // 33 Bits
-#define MESSAGE         0b11010011101100 //0xffff      // 8 Bits
+//#define PREAMBLE        0x7e        // 8 Bits
+//#define DIVIDER         0x104C11DB7  // 33 Bits
+//#define MESSAGE         0b11010011101100 //0xffff      // 8 Bits
 
 /******************************************************/
 /* Data Frame */
@@ -28,7 +28,7 @@ typedef struct data_frame_t
 unsigned int read_bit(const unsigned char bitstring, const int pos)
 {
     if((bitstring & (0b10000000 >> pos)))
-            return 1;
+        return 1;
     else
         return 0;
 }
@@ -52,11 +52,11 @@ void update_preamble_buffer(unsigned char* buffer)
 unsigned int check_preamble(const unsigned char preambleBuffer)
 {
     if((preambleBuffer ^ PREAMBLE) == 0)
-        return NO_ERROR;
-    return ERROR_OCCUR;
+        return TRUE;
+    return TRUE;
 }
 
-void print_buffer(const unsigned char buffer)
+void print_preamble_buffer(const unsigned char buffer)
 {
     for(int i=0; i<8; i++)
     {
@@ -68,3 +68,28 @@ void print_buffer(const unsigned char buffer)
     uart_transmit('\r');
     uart_transmit('\n');
 }
+
+unsigned int update_crc32_buffer(unsigned char* buffer)
+{
+    /* STEP1. Discards the MSB */
+    *buffer &= 0x7f;
+
+    /* STEP2. Left Shift */
+    *buffer <<= 1;
+
+    /* STEP3. Inserts a new LSB */
+    if(_RECEIVED_DATA_)
+        *buffer += 1;
+}
+
+unsigned int check_crc32()
+{
+
+}
+
+
+
+
+
+
+
