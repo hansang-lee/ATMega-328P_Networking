@@ -29,8 +29,6 @@ int main()
 
 	for (;;)
 	{
-		_delay_ms(10000);
-		uart_transmit('\r');
-		uart_transmit('\n');
+
 	}
 }

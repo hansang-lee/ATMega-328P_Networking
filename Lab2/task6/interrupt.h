@@ -1,7 +1,7 @@
 #include "uart.h"
 #include <avr/interrupt.h>
 
-#define _PERIOD_            1000
+#define _PERIOD_            300
 #define _LED_A_TOGGLE_      (PORTB ^= (1 << PB5))
 #define _LED_B_TOGGLE_      (PORTB ^= (1 << PB4))
 #define _PIN_CHANGE_        (PORTB ^= (1 << PB1))
@@ -9,9 +9,19 @@
 #define _SEND_LOGICAL_0_    (PORTB &= ~(1 << PB2))
 #define _RECEIVED_DATA_     (PIND & (1 << PD4))
 
+/* Transmitter */
+#define FLAG_SENDING_PREAMBLE   0
+#define FLAG_GENERATING_CRC     1
+#define FLAG_SENDING_CRC        2
+#define FLAG_SENDING_SIZE       3
+#define FLAG_SENDING_MSG        4
+
+/* Receiver */
 #define FLAG_DETECTING_PREAMBLE 0
-#define FLAG_CHECKING_CRC       1
-#define FLAG_READING_DATA       2
+#define FLAG_RECEIVING_CRC      1
+#define FLAG_RECEIVING_SIZE     2
+#define FLAG_RECEIVING_MSG      3
+#define FLAG_CHECKING_CRC       4
 
 /* Interrupt */
 void interrupt_setup();
