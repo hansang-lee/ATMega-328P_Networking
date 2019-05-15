@@ -1,7 +1,7 @@
 #include "uart.h"
 #include <avr/interrupt.h>
 
-#define _PERIOD_            300
+#define _PERIOD_            100
 #define _LED_A_TOGGLE_      (PORTB ^= (1 << PB5))
 #define _LED_B_TOGGLE_      (PORTB ^= (1 << PB4))
 #define _PIN_CHANGE_        (PORTB ^= (1 << PB1))
@@ -15,6 +15,11 @@
 #define FLAG_SENDING_CRC        2
 #define FLAG_SENDING_SIZE       3
 #define FLAG_SENDING_MSG        4
+
+#define SIZE_OF_PREAMBLE        8
+#define SIZE_OF_CRC             32
+#define SIZE_OF_DLC             8
+#define SIZE_OF_PAYLOAD         32
 
 /* Receiver */
 #define FLAG_DETECTING_PREAMBLE 0
