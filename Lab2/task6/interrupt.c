@@ -3,9 +3,19 @@
 
 /* Interrupt A - Data Transmitter */
 volatile uint16_t transmitFlag = FLAG_SENDING_PREAMBLE;
-volatile uint16_t timerA = (_PERIOD_ / 2);
+volatile uint16_t timerA = (_PERIOD_/2);
 volatile uint16_t transmitCounter = 0;
 
+const uint8_t transmitPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };
+const uint8_t transmitCrcBuffer[(SIZE_OF_CRC/8)] = { 0b11110000, 
+                                                     0b11110000, 
+                                                     0b11110000, 
+                                                     0b11110000 };
+const uint8_t transmitDlcBuffer[SIZE_OF_DLC] = { 0b11110000 };
+const uint8_t transmitPayload[(SIZE_OF_PAYLOAD/8)] = { 0b00001111,
+                                                       0b00001111,
+                                                       0b00001111,
+                                                       0b00001111 };
 ISR(TIMER0_COMPA_vect)
 {
 	timerA++;
@@ -16,16 +26,18 @@ ISR(TIMER0_COMPA_vect)
         
         ////////////////////////////////////////////////////////
         // STEP1. SENDING PREAMBLE
-        static const uint8_t transmitPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };
         if(transmitFlag == FLAG_SENDING_PREAMBLE)
         {
-            if(read_bit(transmitPreambleBuffer, SIZE_OF_PREAMBLE, transmitCounter))
-                _SEND_LOGICAL_1_;
+            if(transmitCounter < SIZE_OF_PREAMBLE)
+            {
+                if(read_bit(transmitPreambleBuffer, SIZE_OF_PREAMBLE, transmitCounter))
+                    _SEND_LOGICAL_1_;
+                else
+                    _SEND_LOGICAL_0_;
+                
+                transmitCounter++;
+            }
             else
-                _SEND_LOGICAL_0_;
-
-            transmitCounter++;
-            if(transmitCounter > SIZE_OF_PREAMBLE)
             {
                 transmitCounter = 0;
                 transmitFlag = FLAG_GENERATING_CRC;
@@ -34,26 +46,25 @@ ISR(TIMER0_COMPA_vect)
 
         ////////////////////////////////////////////////////////
         // STEP2. GENERATING CRC
-        static const uint8_t transmitCrcBuffer[(SIZE_OF_CRC/8)] = { 0b10101010, 
-                                                                    0b10101010, 
-                                                                    0b10101010, 
-                                                                    0b10101010 };
-        if(transmitFlag == FLAG_GENERATING_CRC)
+        else if(transmitFlag == FLAG_GENERATING_CRC)
         {
             transmitFlag = FLAG_SENDING_CRC;
         }
 
         ////////////////////////////////////////////////////////
         // STEP3. SENDING CRC
-        if(transmitFlag == FLAG_SENDING_CRC)
+        else if(transmitFlag == FLAG_SENDING_CRC)
         {
-            if(read_bit(transmitCrcBuffer, SIZE_OF_CRC, transmitCounter))
-                _SEND_LOGICAL_1_;
-            else
-                _SEND_LOGICAL_0_;
+            if(transmitCounter < SIZE_OF_CRC)
+            {
+                if(read_bit(transmitCrcBuffer, SIZE_OF_CRC, transmitCounter))
+                    _SEND_LOGICAL_1_;
+                else
+                    _SEND_LOGICAL_0_;
 
-            transmitCounter++;
-            if(transmitCounter > SIZE_OF_CRC)
+                transmitCounter++;
+            }
+            else
             {
                 transmitCounter = 0;
                 transmitFlag = FLAG_SENDING_SIZE;
@@ -62,37 +73,40 @@ ISR(TIMER0_COMPA_vect)
 
         ////////////////////////////////////////////////////////
         // STEP4. SENDING SIZE
-        static const uint8_t transmitSizeOfPayLoad[SIZE_OF_DLC] = { 0b11000011 };
-        if(transmitFlag == FLAG_SENDING_SIZE)
+        else if(transmitFlag == FLAG_SENDING_SIZE)
         {
-            if(read_bit(transmitSizeOfPayLoad, SIZE_OF_DLC, transmitCounter))
-                _SEND_LOGICAL_1_;
-            else
-                _SEND_LOGICAL_0_;
+            if(transmitCounter < SIZE_OF_DLC)
+            {
+                if(read_bit(transmitDlcBuffer, SIZE_OF_DLC, transmitCounter))
+                    _SEND_LOGICAL_1_;
+                else
+                    _SEND_LOGICAL_0_;
 
-            transmitCounter++;
-            if(transmitCounter > SIZE_OF_DLC)
+                transmitCounter++;
+            }
+
+            else
             {
                 transmitCounter = 0;
-                transmitFlag = FLAG_SENDING_MSG;
+                transmitFlag = FLAG_SENDING_PAYLOAD;
             }
         }
 
         ////////////////////////////////////////////////////////
         // STEP5. SENDING MESSAGE
-        static const uint8_t transmitPayload[(SIZE_OF_PAYLOAD/8)] = { 0b10101010,
-                                                                      0b10101010,
-                                                                      0b10101010,
-                                                                      0b10101010};
-        if(transmitFlag == FLAG_SENDING_MSG)
+        else if(transmitFlag == FLAG_SENDING_PAYLOAD)
         {
-            if(read_bit(transmitPayload, SIZE_OF_PAYLOAD, transmitCounter))
-                _SEND_LOGICAL_1_;
-            else
-                _SEND_LOGICAL_0_;
+            if(transmitCounter < SIZE_OF_PAYLOAD)
+            {
+                if(read_bit(transmitPayload, SIZE_OF_PAYLOAD, transmitCounter))
+                    _SEND_LOGICAL_1_;
+                else
+                    _SEND_LOGICAL_0_;
 
-            transmitCounter++;
-            if(transmitCounter > SIZE_OF_PAYLOAD)
+                transmitCounter++;
+            }
+            
+            else
             {
                 transmitCounter = 0;
                 transmitFlag = FLAG_SENDING_PREAMBLE;
@@ -104,18 +118,28 @@ ISR(TIMER0_COMPA_vect)
 
 /* Pin Change Interrupt */
 volatile uint16_t receiveFlag = FLAG_DETECTING_PREAMBLE;
-static uint16_t receiveCounter = 0;
+volatile uint16_t receiveCounter = 0;
+
+uint8_t receivePreambleBuffer[1] = {0x00};
+const uint8_t preambleReadyMsg[18] = "Preamble Detected";
+
+uint8_t receiveCrcBuffer[4] = {0x00, 0x00, 0x00, 0x00};
+const uint8_t crcReceivedMsg[13] = "CRC Received";
+
+uint8_t receiveDlcBuffer[1] = {0x00};
+const uint8_t dlcReceivedMsg[13] = "DLC Received";
+
+//static uint32_t sizeOfPayload = 0;
+uint8_t receivePayloadBuffer[4] = {0x00, 0x00, 0x00, 0x00};
+const uint8_t payloadReceivedMsg[17] = "Payload Received";
 ISR(PCINT2_vect)
 {
     ////////////////////////////////////////////////////////
     // STEP1. DETECTING PREAMBLE
-    // Constantly receives messages for checking preamble
-    static uint8_t receivePreambleBuffer[1] = {0x00};
-    const uint8_t preambleReadyMsg[17] = "Preamble Detected";
     if(receiveFlag == FLAG_DETECTING_PREAMBLE)
     {
-        update_preamble_buffer(receivePreambleBuffer);
-        print_preamble_buffer(*receivePreambleBuffer);
+        update_preamble_buffer(receivePreambleBuffer, receive_data());
+        print(receivePreambleBuffer, SIZE_OF_PREAMBLE);
         uart_transmit('\r');
 
         if(check_preamble(*receivePreambleBuffer) == TRUE)
@@ -132,90 +156,102 @@ ISR(PCINT2_vect)
 
     ////////////////////////////////////////////////////////
     // STEP2. RECEIVING CRC
-    // When detected PREAMBLE
-    static uint32_t receiveCrcBuffer[1] = {0x00000000};
-    const uint8_t crcReceivedMsg[12] = "CRC Received";
-    if(receiveFlag == FLAG_RECEIVING_CRC)
+    else if(receiveFlag == FLAG_RECEIVING_CRC)
     {
-        // Receiving CRC
-        update_crc32_buffer(receiveCrcBuffer);
-        print_crc32_buffer(*receiveCrcBuffer);
-        uart_transmit('\r');
-
-        // Finished Receiving CRC
-        receiveCounter++;
-        if(receiveCounter > SIZE_OF_CRC)
+        if(receiveCounter < SIZE_OF_CRC)
         {
+            // Receiving CRC
+            update(receiveCrcBuffer, receiveCounter, receive_data());
+            print(receiveCrcBuffer, SIZE_OF_CRC);
+            uart_transmit('\r');
+            receiveCounter++;
+        }
+
+        // Received CRC
+        else
+        {
+            // Message Log
             uart_changeLine();
-            print_msg(crcReceivedMsg, 13);
+            print_msg(crcReceivedMsg, 12);
             uart_changeLine();
             uart_changeLine();
-            receiveCrcBuffer[0] = 0x00000000;
+
+            // Initialization
+            for(int i=0; i<4; i++)
+                receiveCrcBuffer[i] = 0x00;
             receiveCounter = 0;
+
+            // Change Flag
             receiveFlag = FLAG_RECEIVING_SIZE;
         }
     }
 
     ////////////////////////////////////////////////////////
     // STEP3. RECEIVING SIZE
-    static uint8_t receiveDlcBuffer[1] = {0x00};
-    const uint8_t dlcReceivedMsg[12] = "DLC Received";
-    static uint32_t sizeOfPayload = 0;
-    if(receiveFlag == FLAG_RECEIVING_SIZE)
+    else if(receiveFlag == FLAG_RECEIVING_SIZE)
     {
-        // Receiving DLC
-        update_dlc_buffer(receiveDlcBuffer);
-        print_dlc_buffer(*receiveDlcBuffer);
-        uart_transmit('\r');
-
-        // Finished Receiving DLC
-        receiveCounter++;
-        if(receiveCounter > SIZE_OF_DLC)
+        if(receiveCounter < SIZE_OF_DLC)
         {
+            // Receiving DLC
+            update(receiveDlcBuffer, receiveCounter, receive_data());
+            print(receiveDlcBuffer, SIZE_OF_DLC);
+            uart_transmit('\r');
+            receiveCounter++;
+        }
+        // Received DLC
+        else
+        {
+            // Message Log
             uart_changeLine();
             print_msg(dlcReceivedMsg, 12);
             uart_changeLine();
             uart_changeLine();
-            sizeOfPayload &= receiveDlcBuffer[0];
+
+            // Initialization
             receiveDlcBuffer[0] = 0x00;
             receiveCounter = 0;
-            receiveFlag = FLAG_RECEIVING_MSG;
+
+            // Change Flag
+            receiveFlag = FLAG_RECEIVING_PAYLOAD;
         }
     }
 
     ////////////////////////////////////////////////////////
     // STEP4. RECEIVING MESSAGE
-    static uint8_t receivePayloadBuffer[4] = {0};
-    const uint8_t payloadReceivedMsg[16] = "Payload Received";
-    if(receiveFlag == FLAG_RECEIVING_MSG)
+    else if(receiveFlag == FLAG_RECEIVING_PAYLOAD)
     {
-        // Receiving PAYLOAD
-        update_payload_buffer(receivePayloadBuffer, 32, receiveCounter);
-        print_payload_buffer(tt, 32);
-        uart_transmit('\r');
-
-        // Finished Receiving PAYLOAD
-        receiveCounter++;
-        if(receiveCounter > 32)
+        if(receiveCounter < SIZE_OF_PAYLOAD)
         {
+            // Receiving PAYLOAD
+            update(receivePayloadBuffer, receiveCounter, receive_data());
+            print(receivePayloadBuffer, 32);
+            uart_transmit('\r');
+            receiveCounter++;
+        }
+        // Received Payload
+        else
+        {
+            // Message Log
             uart_changeLine();
             print_msg(payloadReceivedMsg, 16);
             uart_changeLine();
             uart_changeLine();
             
+            // Initialization
             for(int i=0; i<4; i++)
                 receivePayloadBuffer[i] = 0x00;
-            
             receiveCounter = 0;
+
+            // Change Flag
             receiveFlag = FLAG_CHECKING_CRC;
         }
     }
 
     ////////////////////////////////////////////////////////
     // STEP5. CHECKING CRC
-    if(receiveFlag == FLAG_CHECKING_CRC)
+    else if(receiveFlag == FLAG_CHECKING_CRC)
     {
-        receiveFlag = FLAG_DETECTING_PREAMBLE;
+        //receiveFlag = FLAG_DETECTING_PREAMBLE;
     }
     ////////////////////////////////////////////////////////
 }

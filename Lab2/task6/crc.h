@@ -9,8 +9,6 @@
 #define PREAMBLE        0x7e
 #define POLYNOMIAL      0b100000100110000010001110110110111
 
-
-
 ///////////////////////////////////////////////////////////////////
 // Data Frame
 typedef struct data_frame_t
@@ -20,10 +18,8 @@ typedef struct data_frame_t
     uint8_t* payload;   // 40-2048
 } frame_t;
 
-
-
 ///////////////////////////////////////////////////////////////////
-// Message Log
+// Transmitting / Receiving
 void print_msg(const uint8_t* msg, const uint16_t length)
 {
     for(int i=0; i<length; i++)
@@ -32,10 +28,6 @@ void print_msg(const uint8_t* msg, const uint16_t length)
     }
 }
 
-
-
-///////////////////////////////////////////////////////////////////
-// Transmitter Functions
 uint32_t read_bit(const uint8_t* bitstring, const uint32_t bits, const uint32_t pos)
 {
     if((bitstring[(pos/8)] & (0b10000000 >> (pos%8))))
@@ -44,108 +36,24 @@ uint32_t read_bit(const uint8_t* bitstring, const uint32_t bits, const uint32_t 
         return 0;
 }
 
-
-
-///////////////////////////////////////////////////////////////////
-// Receiver - PREAMBLE
-void update_preamble_buffer(uint8_t* buffer)
+uint8_t receive_data()
 {
-    *buffer &= 0b01111111;
-    *buffer <<= 1;
     if(_RECEIVED_DATA_)
-        *buffer += 1;
+        return 0x01;
+    else
+        return 0x00;
 }
 
-void print_preamble_buffer(const uint8_t buffer)
-{
-    for(int i=0; i<8; i++)
-    {
-        if(buffer & (0b10000000 >> i))
-            uart_transmit('1');
-        else
-            uart_transmit('0');
-    }
-}
-
-uint16_t check_preamble(const uint8_t preambleBuffer)
-{
-    if((preambleBuffer ^ PREAMBLE) == 0)
-        return TRUE;
-    return FALSE;
-}
-
-
-
-///////////////////////////////////////////////////////////////////
-// Receiver - CRC
-void update_crc32_buffer(uint32_t* buffer)
-{
-    *buffer &= 0x7fffffff;
-    *buffer <<= 1;
-    if(_RECEIVED_DATA_)
-        *buffer += 1;
-}
-
-void print_crc32_buffer(const uint32_t buffer)
-{
-    for(int i=0; i<32; i++)
-    {
-        if(buffer & (0x80000000 >> i))
-            uart_transmit('1');
-        else
-            uart_transmit('0');
-    }
-}
-
-
-
-///////////////////////////////////////////////////////////////////
-// Receiver - DLC
-void update_dlc_buffer(uint8_t* buffer)
-{
-    *buffer &= 0b01111111;
-    *buffer <<= 1;
-    if(_RECEIVED_DATA_)
-        *buffer += 1;
-}
-
-void print_dlc_buffer(const uint8_t buffer)
-{
-    for(int i=0; i<8; i++)
-    {
-        if(buffer & (0b10000000 >> i))
-            uart_transmit('1');
-        else
-            uart_transmit('0');
-    }
-}
-
-void print_dlc_buffer(const uint8_t buffer)
-{
-    for(int i=0; i<8; i++)
-    {
-        if(buffer & (0b10000000 >> i))
-            uart_transmit('1');
-        else
-            uart_transmit('0');
-    }
-}
-
-
-
-///////////////////////////////////////////////////////////////////
-// Receiver - PAYLOAD
-void update_payload_buffer(uint8_t* buffer, const uint32_t bits, const uint32_t pos)
+void update(uint8_t* buffer, const uint32_t pos, const uint8_t data)
 {
     int i = (pos/8);
 
     buffer[i] &= 0b01111111;
     buffer[i] <<= 1;
-    if(_RECEIVED_DATA_)
-        buffer[i] += 1;
+    buffer[i] += data;
 }
 
-void print_payload_buffer(const uint8_t* buffer, const uint32_t bits)
+void print(const uint8_t* buffer, const uint32_t bits)
 {
     for(int i=0; i<bits; i++)
     {
@@ -154,4 +62,18 @@ void print_payload_buffer(const uint8_t* buffer, const uint32_t bits)
         else
             uart_transmit('0');
     }
+}
+
+void update_preamble_buffer(uint8_t* buffer, const uint8_t data)
+{
+    *buffer &= 0b01111111;
+    *buffer <<= 1;
+    *buffer += data;
+}
+
+uint16_t check_preamble(const uint8_t preambleBuffer)
+{
+    if((preambleBuffer ^ PREAMBLE) == 0)
+        return TRUE;
+    return FALSE;
 }
