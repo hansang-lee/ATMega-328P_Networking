@@ -10,16 +10,20 @@
 #define _RECEIVED_DATA_     (PIND & (1 << PD4))
 
 /* Transmitter */
-#define FLAG_SENDING_PREAMBLE   0
-#define FLAG_GENERATING_CRC     1
+#define FLAG_GENERATING_CRC     0
+#define FLAG_SENDING_PREAMBLE   1
 #define FLAG_SENDING_CRC        2
-#define FLAG_SENDING_SIZE       3
+#define FLAG_SENDING_DLC        3
 #define FLAG_SENDING_PAYLOAD    4
 
-#define SIZE_OF_PREAMBLE        8
-#define SIZE_OF_CRC             32
-#define SIZE_OF_DLC             8
-#define SIZE_OF_PAYLOAD         32
+#define SIZE_OF_PREAMBLE_BUF    8
+#define SIZE_OF_CRC_BUF         32
+#define SIZE_OF_DLC_BUF         8
+#define SIZE_OF_PAYLOAD_BUF     32
+#define SIZE_OF_POLYNOMIAL      33
+
+//#define BIT_SIZE_OF_PREAMBLE    40
+//#define BIT_SIZE_OF_POLYNOMIAL  33
 
 /* Receiver */
 #define FLAG_DETECTING_PREAMBLE 0

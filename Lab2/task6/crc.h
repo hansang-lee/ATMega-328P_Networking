@@ -7,7 +7,6 @@
 #define TRUE            0
 #define FALSE           1
 #define PREAMBLE        0x7e
-#define POLYNOMIAL      0b100000100110000010001110110110111
 
 ///////////////////////////////////////////////////////////////////
 // Data Frame
@@ -28,12 +27,26 @@ void print_msg(const uint8_t* msg, const uint16_t length)
     }
 }
 
-uint32_t read_bit(const uint8_t* bitstring, const uint32_t bits, const uint32_t pos)
+uint32_t read_bit(const uint8_t* bitstring, const uint32_t pos)
 {
     if((bitstring[(pos/8)] & (0b10000000 >> (pos%8))))
         return 1;
     else
         return 0;
+}
+
+void write_bit(uint8_t* bitstring, const uint32_t pos, const uint8_t data)
+{
+    if(data==1)
+        bitstring[(pos/8)] |= ((0b10000000) >> (pos%8));
+    else
+    {
+        int tmp=1;
+        for(int i=0; i<(7-(pos%8)); i++)
+            tmp *= 2;
+        bitstring[(pos/8)] &= (0b11111111 - tmp);
+        //bitstring[(pos/8)] &= (!((0b11111111) & (0b10000000 >>(pos%8))));
+    }
 }
 
 uint8_t receive_data()
