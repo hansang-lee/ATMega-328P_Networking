@@ -1,38 +1,41 @@
 #include "uart.h"
 #include <avr/interrupt.h>
 
-#define _PERIOD_            50
-#define _LED_A_TOGGLE_      (PORTB ^= (1 << PB5))
-#define _LED_B_TOGGLE_      (PORTB ^= (1 << PB4))
-#define _PIN_CHANGE_        (PORTB ^= (1 << PB1))
-#define _SEND_LOGICAL_1_    (PORTB |= (1 << PB2))
-#define _SEND_LOGICAL_0_    (PORTB &= ~(1 << PB2))
-#define _RECEIVED_DATA_     (PIND & (1 << PD4))
+/* Turns on LEDs : PB4 and PB5 */
+#define LED_A_TOGGLE()              (PORTB ^= (1 << PB5))
+#define LED_B_TOGGLE()              (PORTB ^= (1 << PB4))
 
-/* Transmitter */
-#define FLAG_GENERATING_CRC     0
-#define FLAG_SENDING_PREAMBLE   1
-#define FLAG_SENDING_CRC        2
-#define FLAG_SENDING_DLC        3
-#define FLAG_SENDING_PAYLOAD    4
+/* Send Data Signal : PB2 > PD4 */
+#define SEND_DATA_ONE()             (PORTB |= (1 << PB2))
+#define SEND_DATA_ZERO()            (PORTB &= ~(1 << PB2))
 
-#define SIZE_OF_PREAMBLE_BUF    8
-#define SIZE_OF_CRC_BUF         32
-#define SIZE_OF_DLC_BUF         8
-#define SIZE_OF_PAYLOAD_BUF     32
-#define SIZE_OF_POLYNOMIAL      33
+/* Send Clock Signal for Pin-Change : PB1 > PD3 */
+#define PIN_CHANGE()                (PORTB ^= (1 << PB1))
+#define RECEIVED_DATA()             (PIND & (1 << PD4))
 
-//#define BIT_SIZE_OF_PREAMBLE    40
-//#define BIT_SIZE_OF_POLYNOMIAL  33
+/* How often run Interrups? : 1000 = 1s */
+#define INTERRUPT_PERIOD            50
 
-/* Receiver */
-#define FLAG_DETECTING_PREAMBLE 0
-#define FLAG_RECEIVING_CRC      1
-#define FLAG_RECEIVING_SIZE     2
-#define FLAG_RECEIVING_PAYLOAD  3
-#define FLAG_CHECKING_CRC       4
+/* Flags at Transmitter Part */
+#define FLAG_GENERATING_CRC         0
+#define FLAG_SENDING_PREAMBLE       1
+#define FLAG_SENDING_CRC            2
+#define FLAG_SENDING_DLC            3
+#define FLAG_SENDING_PAYLOAD        4
 
-/* Interrupt */
+/* Flags at Receiver Part */
+#define FLAG_DETECTING_PREAMBLE     0
+#define FLAG_RECEIVING_CRC          1
+#define FLAG_RECEIVING_SIZE         2
+#define FLAG_RECEIVING_PAYLOAD      3
+#define FLAG_CHECKING_CRC           4
+
+#define SIZE_OF_PREAMBLE            8
+#define SIZE_OF_CRC                 32
+#define SIZE_OF_DLC                 8
+#define SIZE_OF_POLYNOMIAL          33
+#define SIZE_OF_PAYLOAD             32
+
 void interrupt_setup();
 void pin_change_setup();
 
@@ -47,10 +50,8 @@ void interrupt_setup()
 
 void pin_change_setup()
 {
-	/* "PCMSK[2;0]" Pin Change Mask Register */
-	PCMSK2 |= (1 << PCINT19); // PD3
-
-	/* "PCICR" Pin Change Interrupt Control Register */
-	/* "PCIE2" bit is set, any change on any enabled "PCINT[23;16]" will cause an interrupt*/
-	PCICR |= (1 << PCIE2);
+	PCMSK2 |= (1 << PCINT19);   // PCMSK[0;2] : Pin Change Mast Register
+                                // PCINT19 bit : PD3
+	PCICR |= (1 << PCIE2);      // PCICR : Pin Change Interrupt Control Register
+                                // PCIE2 bit : Enabling PCINT[16;23] cause an interrupt
 }
