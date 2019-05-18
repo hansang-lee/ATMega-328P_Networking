@@ -79,9 +79,93 @@ void printBit(const uint8_t* buffer, const uint32_t bits)
     }
 }
 
+/* Check the 8-bits-data is equivalent to the Preamble */
 uint16_t checkPreamble(const uint8_t preambleBuffer)
 {
     if((preambleBuffer ^ PREAMBLE) == 0)
         return TRUE;
     return FALSE;
 }
+
+/* Generates CRC from source and copies the result to destination */
+void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
+{
+    /* This payload will be XOR with polynomial */
+    uint32_t payload_size = (src_size + 8);
+    uint32_t payload_byteSize = (payload_size/8);
+    uint32_t src_byteSize = (src_size/8);
+    uint8_t* payload = (uint8_t*) malloc(payload_size);
+
+    for(int i=0; i<src_byteSize; i++)
+        payload[i] = src[i];
+    for(int i=src_byteSize; i<payload_byteSize; i++)
+        payload[i] = 0x00;
+
+    /* CRC Calculation */
+    uint32_t iterator = 0;
+    uint32_t loop_upperbound = (src_size + 1);
+    while(iterator < loop_upperbound)
+    {
+        /* Debugging */
+        for(int i=0; i<SIZE_OF_CRC; i++)
+        {
+            if((i%8)==0) uart_transmit(' ');
+            if(readBit(payload, i)) uart_transmit('1');
+            else uart_transmit('0');
+        }
+        uart_changeLine();
+
+        /* Payload MSB is 0 : Left-Shift */
+        if(!(readBit(payload, 0)))
+        {
+            /* Every Element does Left-Shift byte-by-byte */
+            for(int i=0; i<payload_byteSize; i++)
+            {
+                if(readBit(&payload[i], 0))
+                {
+                    (!((i-1)<0))?(payload[i-1]+=0x01):(0);
+                }
+                payload[i] &= 0b01111111;
+                payload[i] <<= 1;
+            }
+            iterator++;
+        }
+
+        /* Payload MSB is 1 : XOR */
+        else
+        {
+            for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
+            {
+                writeBit(
+                        payload, 
+                        i, 
+                        (readBit(payload,i)^(readBit(pln,i))));
+            }
+        }
+    }
+
+    /* Copies the generated CRC to the destination */
+    for(int i=0; i<(SIZE_OF_CRC/8); i++)
+    {
+        dst[i] = payload[i];
+    }
+}
+
+int8_t checkCrc(const uint8_t* crc, const uint8_t* polynomial)
+{
+    
+    return TRUE;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

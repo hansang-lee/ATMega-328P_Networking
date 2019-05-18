@@ -29,53 +29,17 @@ ISR(TIMER0_COMPA_vect)
         // STEP1. GENERATING CRC
         if(tFlag == FLAG_GENERATING_CRC)
         {
-            uint32_t size = ((*tDlcBuffer+SIZE_OF_CRC)/8);
-            uint8_t data[size];
-            for(int i=0; i<size; i++) data[i]=0x00;
-            uint32_t steps = (*tDlcBuffer + 1);
-            
-            /* Copies the payload to the buffer for CRC calculation */
-            for(int i=0; i<4; i++)
-                data[i] = tPayloadBuffer[i];
+            /* Initializes CRC Buffer */
+            for(int i=0; i<(SIZE_OF_CRC/8); i++)
+                tCrcBuffer[i] = 0x00;
 
-            /* CRC Calculation */
-            while(tCounter < steps)
-            {
-                /* Payload MSB is 0 : Left Shift */
-                if(!(readBit(data, 0)))
-                {
-                    for(int k=0; k<5; k++)
-                    {
-                        if(readBit(&data[k], 0))
-                            (!((k-1)<0))?(data[k-1]+=0b00000001):(0);
-
-                        data[k] &= 0b01111111;
-                        data[k] <<= 1;
-                    }
-                    tCounter++;
-                }
-
-                /* Payload MSB is 0 : Executes XOR */
-                else
-                {
-                    for(int j=0; j<SIZE_OF_POLYNOMIAL; j++)
-                        writeBit(data, j, (readBit(data, j) ^ readBit(tPolynomial, j)));
-                }
-            }
-
-            /* Copies the generated CRC to global variable */
-            for(int i=0; i<4; i++)
-                tCrcBuffer[i] = data[i];
-            
-            /* Debugging */
-            for(int i=0; i<SIZE_OF_CRC; i++)
-            {
-                if((i%8)==0) uart_transmit(' ');
-                if(readBit(data, i)) uart_transmit('1');
-                else uart_transmit('0');
-            }
-            uart_changeLine();
-
+            /* Calculates CRC */
+            generateCrc(
+                    tCrcBuffer,         // destination
+                    tPayloadBuffer,     // source
+                    *tDlcBuffer,        // source_size
+                    tPolynomial);       // polynomial
+       
             /* Initialization for the next flag */
             tCounter = 0;
             tFlag = FLAG_SENDING_PREAMBLE;
@@ -163,6 +127,8 @@ uint8_t rPayloadBuffer[4]   = {0x00, 0x00, 0x00, 0x00};
 
 const uint8_t logMsg_preamble[18]   = "Preamble Detected";
 const uint8_t logMsg_crc[13]        = "CRC Received";
+const uint8_t logMsg_crc_true[14]  = "CRC is correct";
+const uint8_t logMsg_crc_false[16] = "CRC is incorrect";
 const uint8_t logMsg_dlc[13]        = "DLC Received";
 const uint8_t logMsg_payload[17]    = "Payload Received";
 
@@ -221,16 +187,32 @@ ISR(PCINT2_vect)
             uart_changeLine();
 
             /* Initialization for the next cycle */
-            for(int i=0; i<4; i++)
-                rCrcBuffer[i] = 0x00;
+            //for(int i=0; i<4; i++)
+            //    rCrcBuffer[i] = 0x00;
             rCounter = 0;
-            rFlag = FLAG_RECEIVING_SIZE;
+            rFlag = FLAG_CHECKING_CRC;
+        }
+    }
+
+    ////////////////////////////////////////////////////////
+    // STEP3. CHECKING CRC
+    if(rFlag == FLAG_CHECKING_CRC)
+    {
+        /* Checks CRC and Sets Flag */
+        if(checkCrc(rCrcBuffer, tPolynomial))
+        {
+            rFlag = FLAG_RECEIVING_DLC;
+            printMsg(logMsg_crc_true, 14);
+        }
+        else
+        {
+            rFlag = FLAG_DETECTING_PREAMBLE;
         }
     }
 
     ////////////////////////////////////////////////////////
     // STEP3. RECEIVING DLC
-    else if(rFlag == FLAG_RECEIVING_SIZE)
+    if(rFlag == FLAG_RECEIVING_DLC)
     {
         /* Receiving Data */
         updateBit(rDlcBuffer, rCounter, receiveData());
@@ -251,7 +233,7 @@ ISR(PCINT2_vect)
             uart_changeLine();
 
             /* Initialization for the next cycle */
-            rDlcBuffer[0] = 0x00;
+            //rDlcBuffer[0] = 0x00;
             rCounter = 0;
             rFlag = FLAG_RECEIVING_PAYLOAD;
         }
@@ -286,14 +268,6 @@ ISR(PCINT2_vect)
             rFlag = FLAG_CHECKING_CRC;
         }
     }
-
-    ////////////////////////////////////////////////////////
-    // STEP5. CHECKING CRC
-    else if(rFlag == FLAG_CHECKING_CRC)
-    {
-        //rFlag = FLAG_DETECTING_PREAMBLE;
-    }
-    ////////////////////////////////////////////////////////
 }
 
 /* Clock Signal Interrupt */
