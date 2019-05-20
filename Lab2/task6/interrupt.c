@@ -261,7 +261,7 @@ ISR(PCINT2_vect)
     if(rFlag == FLAG_CHECKING_CRC)
     {
         /* Checks CRC and Sets Flag */
-        if(checkCrc(rCrcBuffer, rPayloadBuffer, rDlcBuffer, tPolynomial, rCrcBuffer))
+        if(checkCrc(rCrcBuffer, rPayloadBuffer, *rDlcBuffer, tPolynomial))
         {
             rFlag = FLAG_RECEIVING_DLC;
             printMsg(logMsg_crc_true, 14);

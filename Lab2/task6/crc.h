@@ -152,9 +152,11 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
     {
         dst[i] = payload[i];
     }
+
+    free (payload);
 }
 
-int8_t checkCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const uint8_t* pln, const uint8_t* crc)
+int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
     uint32_t payload_size = (src_size + SIZE_OF_CRC);
@@ -166,6 +168,8 @@ int8_t checkCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const
         payload[i] = src[i];
     for(int i=src_byteSize; i<payload_byteSize; i++)
         payload[i] = crc[i];
+    for(int i=0; i<SIZE_OF_CRC; i++)
+        crc[i] = 0x00;
 
     /* CRC Calculation */
     uint32_t iterator = 0;
@@ -213,21 +217,13 @@ int8_t checkCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const
     /* Copies the generated CRC to the destination */
     for(int i=0; i<(SIZE_OF_CRC/8); i++)
     {
-        dst[i] = payload[i];
+        payload[0] += payload[i];
     }
-    
-    return TRUE;
+
+    free (payload);
+
+    if(payload[0] == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
