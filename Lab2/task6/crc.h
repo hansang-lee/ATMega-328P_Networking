@@ -72,6 +72,9 @@ void printBit(const uint8_t* buffer, const uint32_t bits)
 {
     for(int i=0; i<bits; i++)
     {
+        if((i%8)==0)
+            uart_transmit(' ');
+
         if(buffer[(i/8)] & (0b10000000 >> (i%8)))
             uart_transmit('1');
         else
@@ -91,7 +94,7 @@ uint16_t checkPreamble(const uint8_t preambleBuffer)
 void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
-    uint32_t payload_size = (src_size + 8);
+    uint32_t payload_size = (src_size + SIZE_OF_CRC);
     uint32_t payload_byteSize = (payload_size/8);
     uint32_t src_byteSize = (src_size/8);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
@@ -103,18 +106,9 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
 
     /* CRC Calculation */
     uint32_t iterator = 0;
-    uint32_t loop_upperbound = (src_size + 1);
+    uint32_t loop_upperbound = src_size;
     while(iterator < loop_upperbound)
     {
-        /* Debugging */
-        for(int i=0; i<SIZE_OF_CRC; i++)
-        {
-            if((i%8)==0) uart_transmit(' ');
-            if(readBit(payload, i)) uart_transmit('1');
-            else uart_transmit('0');
-        }
-        uart_changeLine();
-
         /* Payload MSB is 0 : Left-Shift */
         if(!(readBit(payload, 0)))
         {
@@ -144,6 +138,15 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
         }
     }
 
+    /* Debugging */
+    //for(int i=0; i<SIZE_OF_CRC; i++)
+    //{
+    //    if((i%8)==0) uart_transmit(' ');
+    //    if(readBit(payload, i)) uart_transmit('1');
+    //    else uart_transmit('0');
+    //}
+    //uart_changeLine();
+
     /* Copies the generated CRC to the destination */
     for(int i=0; i<(SIZE_OF_CRC/8); i++)
     {
@@ -151,8 +154,67 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
     }
 }
 
-int8_t checkCrc(const uint8_t* crc, const uint8_t* polynomial)
+int8_t checkCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, const uint8_t* pln, const uint8_t* crc)
 {
+    /* This payload will be XOR with polynomial */
+    uint32_t payload_size = (src_size + SIZE_OF_CRC);
+    uint32_t payload_byteSize = (payload_size/8);
+    uint32_t src_byteSize = (src_size/8);
+    uint8_t* payload = (uint8_t*) malloc(payload_size);
+
+    for(int i=0; i<src_byteSize; i++)
+        payload[i] = src[i];
+    for(int i=src_byteSize; i<payload_byteSize; i++)
+        payload[i] = crc[i];
+
+    /* CRC Calculation */
+    uint32_t iterator = 0;
+    uint32_t loop_upperbound = src_size;
+    while(iterator < loop_upperbound)
+    {
+        /* Payload MSB is 0 : Left-Shift */
+        if(!(readBit(payload, 0)))
+        {
+            /* Every Element does Left-Shift byte-by-byte */
+            for(int i=0; i<payload_byteSize; i++)
+            {
+                if(readBit(&payload[i], 0))
+                {
+                    (!((i-1)<0))?(payload[i-1]+=0x01):(0);
+                }
+                payload[i] &= 0b01111111;
+                payload[i] <<= 1;
+            }
+            iterator++;
+        }
+
+        /* Payload MSB is 1 : XOR */
+        else
+        {
+            for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
+            {
+                writeBit(
+                        payload, 
+                        i, 
+                        (readBit(payload,i)^(readBit(pln,i))));
+            }
+        }
+    }
+
+    /* Debugging */
+    //for(int i=0; i<SIZE_OF_CRC; i++)
+    //{
+    //    if((i%8)==0) uart_transmit(' ');
+    //    if(readBit(payload, i)) uart_transmit('1');
+    //    else uart_transmit('0');
+    //}
+    //uart_changeLine();
+
+    /* Copies the generated CRC to the destination */
+    for(int i=0; i<(SIZE_OF_CRC/8); i++)
+    {
+        dst[i] = payload[i];
+    }
     
     return TRUE;
 }

@@ -8,10 +8,12 @@ volatile uint32_t tCounter = 0;
 uint8_t tPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };  // 0x7e
 uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0x00000000 };
 uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0b00100000 };  // 0x20
+
 uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0b01110100,    // 0x74
                                                   0b01100101,    // 0x65
                                                   0b01110011,    // 0x73
                                                   0b01110100 };  // 0x74
+
 const uint8_t tPolynomial[5]                  = { 0b10000010,
                                                   0b01100000,
                                                   0b10001110,
@@ -47,7 +49,7 @@ ISR(TIMER0_COMPA_vect)
 
         ////////////////////////////////////////////////////////
         // STEP2. SENDING PREAMBLE
-        else if(tFlag == FLAG_SENDING_PREAMBLE)
+        if(tFlag == FLAG_SENDING_PREAMBLE)
         {
             /* Sending Preamble */
             if(readBit(tPreambleBuffer, tCounter)) SEND_DATA_ONE();
@@ -110,7 +112,7 @@ ISR(TIMER0_COMPA_vect)
                 /* Initialization for the next flag */
                 tCounter = 0;
                 tFlag = 1000;
-                //tFlag = FLAG_SENDING_PREAMBLE;
+                tFlag = FLAG_SENDING_PREAMBLE;
             }
         }
         ////////////////////////////////////////////////////////
@@ -135,6 +137,11 @@ const uint8_t logMsg_payload[17]    = "Payload Received";
 /* Receiver Pin-Change-Interrupt */
 ISR(PCINT2_vect)
 {
+    //if(receiveData())
+    //    uart_transmit('1');
+    //else
+    //    uart_transmit('0');
+
     ////////////////////////////////////////////////////////
     // STEP1. DETECTING PREAMBLE
     if(rFlag == FLAG_DETECTING_PREAMBLE)
@@ -143,7 +150,6 @@ ISR(PCINT2_vect)
         updateBit(rPreambleBuffer, (rCounter%8), receiveData());
 
         /* Printing Received-Bits-String */
-        uart_transmit(' ');
         printBit(rPreambleBuffer, SIZE_OF_PREAMBLE);
         uart_transmit('\r');
 
@@ -172,7 +178,6 @@ ISR(PCINT2_vect)
         updateBit(rCrcBuffer, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        uart_transmit(' ');
         printBit(rCrcBuffer, SIZE_OF_CRC);
         uart_transmit('\r');
 
@@ -190,35 +195,18 @@ ISR(PCINT2_vect)
             //for(int i=0; i<4; i++)
             //    rCrcBuffer[i] = 0x00;
             rCounter = 0;
-            rFlag = FLAG_CHECKING_CRC;
-        }
-    }
-
-    ////////////////////////////////////////////////////////
-    // STEP3. CHECKING CRC
-    if(rFlag == FLAG_CHECKING_CRC)
-    {
-        /* Checks CRC and Sets Flag */
-        if(checkCrc(rCrcBuffer, tPolynomial))
-        {
             rFlag = FLAG_RECEIVING_DLC;
-            printMsg(logMsg_crc_true, 14);
-        }
-        else
-        {
-            rFlag = FLAG_DETECTING_PREAMBLE;
         }
     }
 
     ////////////////////////////////////////////////////////
     // STEP3. RECEIVING DLC
-    if(rFlag == FLAG_RECEIVING_DLC)
+    else if(rFlag == FLAG_RECEIVING_DLC)
     {
         /* Receiving Data */
         updateBit(rDlcBuffer, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        uart_transmit(' ');
         printBit(rDlcBuffer, SIZE_OF_DLC);
         uart_transmit('\r');
         
@@ -247,7 +235,6 @@ ISR(PCINT2_vect)
         updateBit(rPayloadBuffer, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        uart_transmit(' ');
         printBit(rPayloadBuffer, SIZE_OF_PAYLOAD);
         uart_transmit('\r');
         
@@ -266,6 +253,22 @@ ISR(PCINT2_vect)
                 rPayloadBuffer[i] = 0x00;
             rCounter = 0;
             rFlag = FLAG_CHECKING_CRC;
+        }
+    }
+
+    ////////////////////////////////////////////////////////
+    // STEP5. CHECKING CRC
+    if(rFlag == FLAG_CHECKING_CRC)
+    {
+        /* Checks CRC and Sets Flag */
+        if(checkCrc(rCrcBuffer, rPayloadBuffer, rDlcBuffer, tPolynomial, rCrcBuffer))
+        {
+            rFlag = FLAG_RECEIVING_DLC;
+            printMsg(logMsg_crc_true, 14);
+        }
+        else
+        {
+            rFlag = 100;//FLAG_RECEIVING_PREAMBLE;
         }
     }
 }
