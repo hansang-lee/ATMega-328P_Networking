@@ -14,7 +14,7 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            50
+#define INTERRUPT_PERIOD            100
 
 /* Flags at Transmitter Part */
 #define FLAG_GENERATING_CRC         0
@@ -26,9 +26,9 @@
 /* Flags at Receiver Part */
 #define FLAG_DETECTING_PREAMBLE     0
 #define FLAG_RECEIVING_CRC          1
-#define FLAG_CHECKING_CRC           2
-#define FLAG_RECEIVING_DLC          3
-#define FLAG_RECEIVING_PAYLOAD      4
+#define FLAG_RECEIVING_DLC          2
+#define FLAG_RECEIVING_PAYLOAD      3
+#define FLAG_CHECKING_CRC           4
 
 #define SIZE_OF_PREAMBLE            8
 #define SIZE_OF_CRC                 32

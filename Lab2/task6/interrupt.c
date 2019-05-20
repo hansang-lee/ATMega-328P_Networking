@@ -8,12 +8,10 @@ volatile uint32_t tCounter = 0;
 uint8_t tPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };  // 0x7e
 uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0x00000000 };
 uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0b00100000 };  // 0x20
-
 uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0b01110100,    // 0x74
                                                   0b01100101,    // 0x65
                                                   0b01110011,    // 0x73
                                                   0b01110100 };  // 0x74
-
 const uint8_t tPolynomial[5]                  = { 0b10000010,
                                                   0b01100000,
                                                   0b10001110,
@@ -49,7 +47,7 @@ ISR(TIMER0_COMPA_vect)
 
         ////////////////////////////////////////////////////////
         // STEP2. SENDING PREAMBLE
-        if(tFlag == FLAG_SENDING_PREAMBLE)
+        else if(tFlag == FLAG_SENDING_PREAMBLE)
         {
             /* Sending Preamble */
             if(readBit(tPreambleBuffer, tCounter)) SEND_DATA_ONE();
@@ -65,7 +63,7 @@ ISR(TIMER0_COMPA_vect)
         }
 
         ////////////////////////////////////////////////////////
-        // STEP2. SENDING CRC
+        // STEP3. SENDING CRC
         else if(tFlag == FLAG_SENDING_CRC)
         {
             /* Sending CRC */
@@ -82,7 +80,7 @@ ISR(TIMER0_COMPA_vect)
         }
 
         ////////////////////////////////////////////////////////
-        // STEP3. SENDING DLC
+        // STEP4. SENDING DLC
         else if(tFlag == FLAG_SENDING_DLC)
         {
             /* Sending DLC */
@@ -99,7 +97,7 @@ ISR(TIMER0_COMPA_vect)
         }
 
         ////////////////////////////////////////////////////////
-        // STEP4. SENDING PAYLOAD
+        // STEP5. SENDING PAYLOAD
         else if(tFlag == FLAG_SENDING_PAYLOAD)
         {
             /* Sending Payload */
@@ -111,8 +109,7 @@ ISR(TIMER0_COMPA_vect)
             {
                 /* Initialization for the next flag */
                 tCounter = 0;
-                tFlag = 1000;
-                tFlag = FLAG_SENDING_PREAMBLE;
+                tFlag = 9999;//FLAG_SENDING_PREAMBLE;
             }
         }
         ////////////////////////////////////////////////////////
@@ -122,40 +119,39 @@ ISR(TIMER0_COMPA_vect)
 volatile uint32_t rFlag = FLAG_DETECTING_PREAMBLE;
 volatile uint32_t rCounter = 0;
 
-uint8_t rPreambleBuffer[1]  = {0x00};
-uint8_t rCrcBuffer[4]       = {0x00, 0x00, 0x00, 0x00};
-uint8_t rDlcBuffer[1]       = {0x00};
-uint8_t rPayloadBuffer[4]   = {0x00, 0x00, 0x00, 0x00};
+uint8_t rQueue[(SIZE_OF_PREAMBLE/8)]          = {0x00};
+uint8_t rCrcBuffer[(SIZE_OF_CRC/8)]           = {0x00, 0x00, 0x00, 0x00};
+uint8_t rDlcBuffer[(SIZE_OF_DLC/8)]           = {0x00};
+uint8_t rPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = {0x00, 0x00, 0x00, 0x00};
 
 const uint8_t logMsg_preamble[18]   = "Preamble Detected";
 const uint8_t logMsg_crc[13]        = "CRC Received";
-const uint8_t logMsg_crc_true[14]  = "CRC is correct";
-const uint8_t logMsg_crc_false[16] = "CRC is incorrect";
+const uint8_t logMsg_crc_true[14]   = "CRC is correct";
+const uint8_t logMsg_crc_false[16]  = "CRC is incorrect";
 const uint8_t logMsg_dlc[13]        = "DLC Received";
 const uint8_t logMsg_payload[17]    = "Payload Received";
 
 /* Receiver Pin-Change-Interrupt */
 ISR(PCINT2_vect)
 {
-    //if(receiveData())
-    //    uart_transmit('1');
-    //else
-    //    uart_transmit('0');
-
     ////////////////////////////////////////////////////////
     // STEP1. DETECTING PREAMBLE
     if(rFlag == FLAG_DETECTING_PREAMBLE)
     {
         /* Receiving Data */
-        updateBit(rPreambleBuffer, (rCounter%8), receiveData());
-
+        updateBit(rQueue, (rCounter%8), receiveData());
+            
         /* Printing Received-Bits-String */
-        printBit(rPreambleBuffer, SIZE_OF_PREAMBLE);
+        printBit(rQueue, SIZE_OF_PREAMBLE);
         uart_transmit('\r');
 
         /* Detected the Preamble */
-        if(checkPreamble(*rPreambleBuffer) == TRUE)
+        if(checkPreamble(*rQueue))
         {
+            /* Printing Received-Bits-String */
+            //printBit(rQueue, SIZE_OF_PREAMBLE);
+            //uart_transmit('\r');
+
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -164,7 +160,6 @@ ISR(PCINT2_vect)
             uart_changeLine();
 
             /* Initialization for the next cycle */
-            *rPreambleBuffer = 0x00;
             rCounter = 0;
             rFlag = FLAG_RECEIVING_CRC;
         }
@@ -184,6 +179,10 @@ ISR(PCINT2_vect)
         /* Finished Receiving CRC */
         if((++rCounter) >= SIZE_OF_CRC)
         {
+            /* Printing Received-Bits-String */
+            //printBit(rCrcBuffer, SIZE_OF_CRC);
+            //uart_transmit('\r');
+
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -192,8 +191,6 @@ ISR(PCINT2_vect)
             uart_changeLine();
 
             /* Initialization for the next cycle */
-            //for(int i=0; i<4; i++)
-            //    rCrcBuffer[i] = 0x00;
             rCounter = 0;
             rFlag = FLAG_RECEIVING_DLC;
         }
@@ -205,7 +202,7 @@ ISR(PCINT2_vect)
     {
         /* Receiving Data */
         updateBit(rDlcBuffer, rCounter, receiveData());
-        
+
         /* Printing Received-Bits-String */
         printBit(rDlcBuffer, SIZE_OF_DLC);
         uart_transmit('\r');
@@ -213,6 +210,10 @@ ISR(PCINT2_vect)
         /* Finished Receiving DLC */
         if((++rCounter) >= SIZE_OF_DLC)
         {
+            /* Printing Received-Bits-String */
+            //printBit(rDlcBuffer, SIZE_OF_DLC);
+            //uart_transmit('\r');
+
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -221,7 +222,6 @@ ISR(PCINT2_vect)
             uart_changeLine();
 
             /* Initialization for the next cycle */
-            //rDlcBuffer[0] = 0x00;
             rCounter = 0;
             rFlag = FLAG_RECEIVING_PAYLOAD;
         }
@@ -237,10 +237,14 @@ ISR(PCINT2_vect)
         /* Printing Received-Bits-String */
         printBit(rPayloadBuffer, SIZE_OF_PAYLOAD);
         uart_transmit('\r');
-        
+
         /* Finished Receiving PAYLOAD */
         if((++rCounter) >= SIZE_OF_PAYLOAD)
         {
+            /* Printing Received-Bits-String */
+            //printBit(rPayloadBuffer, SIZE_OF_PAYLOAD);
+            //uart_transmit('\r');
+        
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -249,8 +253,6 @@ ISR(PCINT2_vect)
             uart_changeLine();
             
             /* Initialization for the next cycle */
-            for(int i=0; i<4; i++)
-                rPayloadBuffer[i] = 0x00;
             rCounter = 0;
             rFlag = FLAG_CHECKING_CRC;
         }
@@ -258,19 +260,52 @@ ISR(PCINT2_vect)
 
     ////////////////////////////////////////////////////////
     // STEP5. CHECKING CRC
-    if(rFlag == FLAG_CHECKING_CRC)
+    // Problem should be here!!!
+    else if(rFlag == FLAG_CHECKING_CRC)
     {
         /* Checks CRC and Sets Flag */
-        if(checkCrc(rCrcBuffer, rPayloadBuffer, *rDlcBuffer, tPolynomial))
+        if((checkCrc(rCrcBuffer, rPayloadBuffer, *rDlcBuffer, tPolynomial)))
         {
-            rFlag = FLAG_RECEIVING_DLC;
+            /* Printing Received-Bits-String */
+            printBit(rCrcBuffer, SIZE_OF_CRC);
+            uart_changeLine();
+
+            /* Log-Messages */
+            uart_transmit(' ');
             printMsg(logMsg_crc_true, 14);
+            uart_changeLine();
+            uart_changeLine();
         }
         else
         {
-            rFlag = 100;//FLAG_RECEIVING_PREAMBLE;
+            /* Printing Received-Bits-String */
+            printBit(rCrcBuffer, SIZE_OF_CRC);
+            uart_transmit('\r');
+            uart_changeLine();
+
+            /* Log-Messages */
+            uart_transmit(' ');
+            printMsg(logMsg_crc_false, 16);
+            uart_changeLine();
+            uart_changeLine();
         }
+        
+        /* Initialization for the next cycle */
+        *rQueue = 0x00;
+        for(int i=0; i<4; i++) {rCrcBuffer[i] = 0x00;}
+        rDlcBuffer[0] = 0x00;
+        for(int i=0; i<4; i++) {rPayloadBuffer[i] = 0x00;}
+        rCounter = 0;
+        rFlag = 1010;//FLAG_DETECTING_PREAMBLE;
     }
+    else if(rFlag == 1010)
+    {
+        if(receiveData())
+            uart_transmit('1');
+        else
+            uart_transmit('0');
+    }
+
 }
 
 /* Clock Signal Interrupt */

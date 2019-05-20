@@ -8,14 +8,6 @@
 #define FALSE           1
 #define PREAMBLE        0x7e
 
-/* Data Frame */
-typedef struct data_frame_t
-{
-    uint32_t crc32;
-    uint8_t size;
-    uint8_t* payload;
-} frame_t;
-
 /* Print log-messages */
 void printMsg(const uint8_t* msg, const uint8_t length)
 {
@@ -37,13 +29,11 @@ uint8_t readBit(const uint8_t* bitstring, const uint32_t pos)
 /* Write a bit on a specific position of a bitstring */
 void writeBit(uint8_t* bitstring, const uint32_t pos, const uint8_t data)
 {
-    if(data==1)
-        bitstring[(pos/8)] |= ((0b10000000) >> (pos%8));
+    if(data==1) {bitstring[(pos/8)] |= ((0b10000000) >> (pos%8));}
     else
     {
         int tmp=1;
-        for(int i=0; i<(7-(pos%8)); i++)
-            tmp *= 2;
+        for(int i=0; i<(7-(pos%8)); i++) {tmp *= 2;}
         bitstring[(pos/8)] &= (0b11111111 - tmp);
     }
 }
@@ -51,20 +41,18 @@ void writeBit(uint8_t* bitstring, const uint32_t pos, const uint8_t data)
 /* Returns the current data signal */
 uint8_t receiveData()
 {
-    if((PIND & (1 << PD4)))
-        return 0x01;
-    else
-        return 0x00;
+    if((PIND & (1 << PD4))) {return 0x01;}
+    else {return 0x00;}
 }
 
 /* Updates LSB from a 8-bits-string */
 void updateBit(uint8_t* buffer, const uint32_t pos, const uint8_t data)
 {
-    int i = (pos/8);
-
-    buffer[i] &= 0b01111111;
-    buffer[i] <<= 1;
-    buffer[i] += data;
+    int tmp = (pos/8);
+    
+    buffer[tmp] &= 0b01111111;
+    buffer[tmp] <<= 1;
+    buffer[tmp] += data;
 }
 
 /* Prints the 8-bits-string */
@@ -72,13 +60,9 @@ void printBit(const uint8_t* buffer, const uint32_t bits)
 {
     for(int i=0; i<bits; i++)
     {
-        if((i%8)==0)
-            uart_transmit(' ');
-
-        if(buffer[(i/8)] & (0b10000000 >> (i%8)))
-            uart_transmit('1');
-        else
-            uart_transmit('0');
+        if((i%8)==0) {uart_transmit(' ');}
+        if(buffer[(i/8)] & (0b10000000 >> (i%8))) {uart_transmit('1');}
+        else {uart_transmit('0');}
     }
 }
 
@@ -86,8 +70,30 @@ void printBit(const uint8_t* buffer, const uint32_t bits)
 uint16_t checkPreamble(const uint8_t preambleBuffer)
 {
     if((preambleBuffer ^ PREAMBLE) == 0)
-        return TRUE;
-    return FALSE;
+        return 1;
+    return 0;
+}
+
+/* Left Shift */
+void leftShift(uint8_t* bitstring, uint32_t bit_size, uint8_t count)
+{
+    for(int i=0; i<count; i++)
+    {
+        /* Payload MSB is 0 : Left-Shift */
+        if(!(readBit(bitstring, 0)))
+        {
+            /* Every Element does Left-Shift byte-by-byte */
+            for(int i=0; i<(bit_size/8); i++)
+            {
+                if(readBit(&bitstring[i], 0))
+                {
+                    (!((i-1)<0))?(bitstring[i-1]+=0x01):(0);
+                }
+                bitstring[i] &= 0b01111111;
+                bitstring[i] <<= 1;
+            }
+        }
+    }
 }
 
 /* Generates CRC from source and copies the result to destination */
@@ -99,10 +105,9 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
     uint32_t src_byteSize = (src_size/8);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
-    for(int i=0; i<src_byteSize; i++)
-        payload[i] = src[i];
-    for(int i=src_byteSize; i<payload_byteSize; i++)
-        payload[i] = 0x00;
+    /* Copies the payload to the temporary variable */
+    for(int i=0; i<src_byteSize; i++) {payload[i] = src[i];}
+    for(int i=src_byteSize; i<payload_byteSize; i++) {payload[i] = 0x00;}
 
     /* CRC Calculation */
     uint32_t iterator = 0;
@@ -130,22 +135,10 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
         {
             for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
             {
-                writeBit(
-                        payload, 
-                        i, 
-                        (readBit(payload,i)^(readBit(pln,i))));
+                writeBit(payload, i, (readBit(payload,i)^(readBit(pln,i))));
             }
         }
     }
-
-    /* Debugging */
-    //for(int i=0; i<SIZE_OF_CRC; i++)
-    //{
-    //    if((i%8)==0) uart_transmit(' ');
-    //    if(readBit(payload, i)) uart_transmit('1');
-    //    else uart_transmit('0');
-    //}
-    //uart_changeLine();
 
     /* Copies the generated CRC to the destination */
     for(int i=0; i<(SIZE_OF_CRC/8); i++)
@@ -153,7 +146,7 @@ void generateCrc(uint8_t* dst, const uint8_t* src, const uint32_t src_size, cons
         dst[i] = payload[i];
     }
 
-    free (payload);
+    free(payload);
 }
 
 int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
@@ -164,12 +157,10 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
     uint32_t src_byteSize = (src_size/8);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
-    for(int i=0; i<src_byteSize; i++)
-        payload[i] = src[i];
-    for(int i=src_byteSize; i<payload_byteSize; i++)
-        payload[i] = crc[i];
-    for(int i=0; i<SIZE_OF_CRC; i++)
-        crc[i] = 0x00;
+    /* Copies the payload to the temporary variable */
+    for(int i=0; i<src_byteSize; i++) {payload[i] = src[i];}
+    for(int i=src_byteSize; i<payload_byteSize; i++) {payload[i] = crc[i];}
+    for(int i=0; i<SIZE_OF_CRC; i++) {crc[i] = 0x00;}
 
     /* CRC Calculation */
     uint32_t iterator = 0;
@@ -197,33 +188,22 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
         {
             for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
             {
-                writeBit(
-                        payload, 
-                        i, 
-                        (readBit(payload,i)^(readBit(pln,i))));
+                writeBit(payload, i, (readBit(payload,i)^(readBit(pln,i))));
             }
         }
     }
 
-    /* Debugging */
-    //for(int i=0; i<SIZE_OF_CRC; i++)
-    //{
-    //    if((i%8)==0) uart_transmit(' ');
-    //    if(readBit(payload, i)) uart_transmit('1');
-    //    else uart_transmit('0');
-    //}
-    //uart_changeLine();
-
     /* Copies the generated CRC to the destination */
+    int result=0;
     for(int i=0; i<(SIZE_OF_CRC/8); i++)
     {
-        payload[0] += payload[i];
+        result += payload[i];
     }
 
-    free (payload);
+    free(payload);
 
-    if(payload[0] == 0)
-        return TRUE;
+    if(result == 0)
+        return 1;
     else
-        return FALSE;
+        return 0;
 }
