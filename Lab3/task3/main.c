@@ -1,25 +1,33 @@
 #include "io.c"
-#include "interrupt.c"
+#include "interrupt.h"
 #include <util/delay.h>
 
 /********************************************************************************
- * TASK 2-4 : SENDING DATA with CRC32
- * 			: INTERRUPT COMPA/COMPB, PIN CHANGE INTERRUPT 
- * 
- * "Scenario"
- * -
- * -
- * 
- * "Polynomial for CRC32"
- * 1 0000 0100 1100 0001 0001 1101 1011 0111
- * 
- * "Data Frame Format"
- * 1 Bytes      - Preamble  "01111110"
- * 4 Bytes      - CRC32     "xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx"
- * 0-2008 Bytes - Payload   "xxxxxxxx ..."
+ ****** TASK 3-3 : Network Layer 3 (At the different Source Code)
+ *
+ ****** ID : 001 - 255 (Must be unique in the network)
+ *  # ID 0x0f
+ *  # ID 0x00 - broadcast address
+ *
+ ****** Scenario
+ *  # Correct ID - Send it over to Layer 4
+ *  # Wrong ID - Relay it to the next node
+ *  # Ring Topology
+ *  # Each node has 2 nodes connections
+ *
+ ****** Note
+ *  Q. What happen when the receiver of a message cannot be found in the network?
+ *  Q. What should happen?
+ *  Q. How do you realize the demanded prioritization scheme?
+ *
+ * 1. Payload - 2008
+ * 2. receive buffer - frame format
+ * 3. layer3
  ********************************************************************************/
 int main()
 {
+    //frame_init(rFrame);
+
 	io_init();
 	cli();
 	uart_init(MYUBRR);

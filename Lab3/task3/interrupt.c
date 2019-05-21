@@ -1,5 +1,6 @@
 #include "interrupt.h"
 #include "crc.h"
+#include "layer3.c"
 
 /* Transmitter Interrupt */
 ISR(TIMER0_COMPA_vect)
@@ -128,7 +129,6 @@ ISR(TIMER0_COMPA_vect)
                 tFlag = 9999;//FLAG_SENDING_PREAMBLE;
             }
         }
-        ////////////////////////////////////////////////////////
 	}
 }
 
@@ -333,6 +333,13 @@ ISR(PCINT2_vect)
         for(int i=0; i<4; i++) {rPayloadBuffer[i] = 0x00;}
         rCounter = 0;
         rFlag = FLAG_DETECTING_PREAMBLE;
+    }
+    
+    ////////////////////////////////////////////////////////
+    // STEP8. LAYER3
+    else if(tFlag == FLAG_PROCESSING_DATA)
+    {
+        //layer3(frame);
     }
 }
 

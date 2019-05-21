@@ -38,16 +38,20 @@
 #define SIZE_OF_CRC                 32
 #define SIZE_OF_DLC                 8
 #define SIZE_OF_POLYNOMIAL          33
-#define SIZE_OF_PAYLOAD             32
+#define SIZE_OF_PAYLOAD             32 //2008
 #define SIZE_OF_ADDRESS             8
+
+#define MY_ID                       0x0f
+#define PRE_NODE_ID                 0x14
+#define NEXT_NODE_ID                0x14
 
 typedef struct
 {
-    uint8_t destination[(SIZE_OF_ADDRESS/8)];
-    uint8_t source[(SIZE_OF_ADDRESS/8)];
-    uint8_t crc32[(SIZE_OF_CRC/8)];
-    uint8_t dlc[(SIZE_OF_DLC/8)];
-    uint8_t payload[(SIZE_OF_PAYLOAD/8)];
+    uint8_t destination[(SIZE_OF_ADDRESS/8)];   // 1
+    uint8_t source[(SIZE_OF_ADDRESS/8)];        // 1
+    uint8_t crc32[(SIZE_OF_CRC/8)];             // 4
+    uint8_t dlc[(SIZE_OF_DLC/8)];               // 1
+    uint8_t payload[(SIZE_OF_PAYLOAD/8)];       // 2008
 } frame_t;
 
 void interrupt_setup();
@@ -58,25 +62,29 @@ void init_frame(frame_t*);
 volatile uint32_t timerA = (INTERRUPT_PERIOD/2);
 volatile uint32_t tFlag = FLAG_GENERATING_CRC;
 volatile uint32_t tCounter = 0;
-uint8_t tPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };
-uint8_t tDestination[(SIZE_OF_ADDRESS/8)]     = { 0b00010011 };
-uint8_t tSource[(SIZE_OF_ADDRESS/8)]          = { 0b00001111 };
-uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0x00000000 };
-uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0b00100000 };
-uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0b01110100, 
-                                                  0b01100101,
-                                                  0b01110011,
-                                                  0b01110100 };
+
 uint8_t tPolynomial[5]                        = { 0b10000010,
                                                   0b01100000,
                                                   0b10001110,
                                                   0b11011011,
                                                   0b10000000 };
 
+uint8_t tPreambleBuffer[(SIZE_OF_PREAMBLE/8)] = { 0b01111110 };
+uint8_t tDestination[(SIZE_OF_ADDRESS/8)]     = { 0b00010011 };
+const uint8_t tSource[(SIZE_OF_ADDRESS/8)]    = { MY_ID };
+uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0x00000000 };
+uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0b00100000 };
+uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0b01110100, 
+                                                  0b01100101,
+                                                  0b01110011,
+                                                  0b01110100 };
+
 /* Global Variables for RECEIVER */
 volatile uint32_t timerB = 0;
 volatile uint32_t rFlag = FLAG_DETECTING_PREAMBLE;
 volatile uint32_t rCounter = 0;
+
+//frame_t* rFrame;
 
 uint8_t rQueue[(SIZE_OF_PREAMBLE/8)]        = { 0 };
 uint8_t rDestination[(SIZE_OF_ADDRESS/8)]   = { 0 };
@@ -84,6 +92,7 @@ uint8_t rSource[(SIZE_OF_ADDRESS/8)]        = { 0 };
 uint8_t rCrcBuffer[(SIZE_OF_CRC/8)]         = { 0 };
 uint8_t rDlcBuffer[(SIZE_OF_DLC/8)]         = { 0 };
 uint8_t rPayloadBuffer[(SIZE_OF_PAYLOAD/8)] = { 0 };
+
 const uint8_t logMsg_preamble[18]  = "Preamble Detected";
 const uint8_t logMsg_dst[20]       = "Destination Received";
 const uint8_t logMsg_src[15]       = "Source Received";
@@ -112,6 +121,8 @@ void pin_change_setup()
 
 void frame_init(frame_t* frame)
 {
+    for(int i=0; i<(SIZE_OF_ADDRESS/8); i++) {frame->destination[i] = 0x00;}
+    for(int i=0; i<(SIZE_OF_ADDRESS/8); i++) {frame->source[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_CRC/8); i++) {frame->crc32[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_DLC/8); i++) {frame->dlc[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_PAYLOAD/8); i++) {frame->payload[i] = 0x00;}
