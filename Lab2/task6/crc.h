@@ -132,7 +132,7 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
 
     /* Copies the payload to the temporary variable */
     for(int i=0; i<(src_size/8); i++) {payload[i] = src[i];}
-    for(int i=(src_size/8); i<(payload_size/8); i++) {payload[i] = crc[i-(payload_size/8)];}
+    for(int i=(src_size/8); i<(payload_size/8); i++) {payload[i] = crc[i-(src_size/8)];}
 
     /* CRC Calculation */
     uint32_t iterator = 0;
