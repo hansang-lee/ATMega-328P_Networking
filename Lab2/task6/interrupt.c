@@ -148,10 +148,6 @@ ISR(PCINT2_vect)
         /* Detected the Preamble */
         if(checkPreamble(*rQueue))
         {
-            /* Printing Received-Bits-String */
-            //printBit(rQueue, SIZE_OF_PREAMBLE);
-            //uart_transmit('\r');
-
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -179,10 +175,6 @@ ISR(PCINT2_vect)
         /* Finished Receiving CRC */
         if((++rCounter) >= SIZE_OF_CRC)
         {
-            /* Printing Received-Bits-String */
-            //printBit(rCrcBuffer, SIZE_OF_CRC);
-            //uart_transmit('\r');
-
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -210,10 +202,6 @@ ISR(PCINT2_vect)
         /* Finished Receiving DLC */
         if((++rCounter) >= SIZE_OF_DLC)
         {
-            /* Printing Received-Bits-String */
-            //printBit(rDlcBuffer, SIZE_OF_DLC);
-            //uart_transmit('\r');
-
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -241,10 +229,6 @@ ISR(PCINT2_vect)
         /* Finished Receiving PAYLOAD */
         if((++rCounter) >= SIZE_OF_PAYLOAD)
         {
-            /* Printing Received-Bits-String */
-            //printBit(rPayloadBuffer, SIZE_OF_PAYLOAD);
-            //uart_transmit('\r');
-        
             /* Log-Messages */
             uart_changeLine();
             uart_transmit(' ');
@@ -260,7 +244,6 @@ ISR(PCINT2_vect)
 
     ////////////////////////////////////////////////////////
     // STEP5. CHECKING CRC
-    // Problem should be here!!!
     else if(rFlag == FLAG_CHECKING_CRC)
     {
         /* Checks CRC and Sets Flag */
@@ -296,16 +279,8 @@ ISR(PCINT2_vect)
         rDlcBuffer[0] = 0x00;
         for(int i=0; i<4; i++) {rPayloadBuffer[i] = 0x00;}
         rCounter = 0;
-        rFlag = 1010;//FLAG_DETECTING_PREAMBLE;
+        rFlag = FLAG_DETECTING_PREAMBLE;
     }
-    else if(rFlag == 1010)
-    {
-        if(receiveData())
-            uart_transmit('1');
-        else
-            uart_transmit('0');
-    }
-
 }
 
 /* Clock Signal Interrupt */
