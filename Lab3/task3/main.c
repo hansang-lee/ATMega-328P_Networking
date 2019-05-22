@@ -1,6 +1,5 @@
 #include "io.c"
 #include "interrupt.c"
-#include <util/delay.h>
 
 /********************************************************************************
  ****** TASK 3-3 : Network Layer 3 (At the different Source Code)
@@ -27,6 +26,7 @@
 int main()
 {
     frame_init(rFrame);
+    //frame_clear(&rFrame);
 
 	io_init();
 	cli();

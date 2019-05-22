@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <time.h>
+#pragma once
 #include <stdlib.h>
+#include "uart.h"
 
 #define NO_ERROR        0
 #define ERROR_OCCUR     1

@@ -1,3 +1,4 @@
+#pragma once
 #include <avr/io.h>
 #define F_CPU 12000000UL
 #define BAUD 19200UL

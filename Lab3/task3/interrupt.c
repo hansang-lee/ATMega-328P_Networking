@@ -1,6 +1,9 @@
+#pragma once
+#include <avr/interrupt.h>
 #include "interrupt.h"
 #include "crc.h"
-//#include "layer3.c"
+#include "uart.h"
+#include "layer3.c"
 
 /* Transmitter Interrupt */
 ISR(TIMER0_COMPA_vect)
@@ -22,7 +25,7 @@ ISR(TIMER0_COMPA_vect)
                     tCrcBuffer,         // destination
                     tPayloadBuffer,     // source
                     *tDlcBuffer,        // source_size
-                    tPolynomial);       // polynomial
+                    _polynomial);       // polynomial
        
             /* Initialization for the next flag */
             tCounter = 0;
@@ -34,7 +37,7 @@ ISR(TIMER0_COMPA_vect)
         else if(tFlag == FLAG_SENDING_PREAMBLE)
         {
             /* Sending Preamble */
-            if(readBit(tPreambleBuffer, tCounter)) SEND_DATA_ONE();
+            if(readBit(_preamble, tCounter)) SEND_DATA_ONE();
             else SEND_DATA_ZERO();
 
             /* Finished Sending Preamble */
@@ -167,10 +170,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_RECEIVING_DESTINATION)
     {
         /* Receiving Data */
-        updateBit(rDestination, rCounter, receiveData());
+        updateBit(rFrame->dst, rCounter, receiveData());
 
         /* Printing Received-Bits-String */
-        printBit(rDestination, SIZE_OF_ADDRESS);
+        printBit(rFrame->dst, SIZE_OF_ADDRESS);
         uart_transmit('\r');
 
         if((++rCounter) >= SIZE_OF_ADDRESS)
@@ -193,10 +196,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_RECEIVING_SOURCE)
     {
         /* Receiving Data */
-        updateBit(rSource, rCounter, receiveData());
+        updateBit(rFrame->src, rCounter, receiveData());
 
         /* Printing Received-Bits-String */
-        printBit(rSource, SIZE_OF_ADDRESS);
+        printBit(rFrame->src, SIZE_OF_ADDRESS);
         uart_transmit('\r');
 
         if((++rCounter) >= SIZE_OF_ADDRESS)
@@ -219,10 +222,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_RECEIVING_CRC)
     {
         /* Receiving Data */
-        updateBit(rCrcBuffer, rCounter, receiveData());
+        updateBit(rFrame->crc, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        printBit(rCrcBuffer, SIZE_OF_CRC);
+        printBit(rFrame->crc, SIZE_OF_CRC);
         uart_transmit('\r');
 
         /* Finished Receiving CRC */
@@ -246,10 +249,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_RECEIVING_DLC)
     {
         /* Receiving Data */
-        updateBit(rDlcBuffer, rCounter, receiveData());
+        updateBit(rFrame->dlc, rCounter, receiveData());
 
         /* Printing Received-Bits-String */
-        printBit(rDlcBuffer, SIZE_OF_DLC);
+        printBit(rFrame->dlc, SIZE_OF_DLC);
         uart_transmit('\r');
         
         /* Finished Receiving DLC */
@@ -273,10 +276,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_RECEIVING_PAYLOAD)
     {
         /* Receiving Data */
-        updateBit(rPayloadBuffer, rCounter, receiveData());
+        updateBit(rFrame->payload, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        printBit(rPayloadBuffer, SIZE_OF_PAYLOAD);
+        printBit(rFrame->payload, SIZE_OF_PAYLOAD);
         uart_transmit('\r');
 
         /* Finished Receiving PAYLOAD */
@@ -300,10 +303,10 @@ ISR(PCINT2_vect)
     else if(rFlag == FLAG_CHECKING_CRC)
     {
         /* Checks CRC and Sets Flag */
-        if((checkCrc(rCrcBuffer, rPayloadBuffer, *rDlcBuffer, tPolynomial)))
+        if((checkCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
         {
             /* Printing Received-Bits-String */
-            printBit(rCrcBuffer, SIZE_OF_CRC);
+            printBit(rFrame->crc, SIZE_OF_CRC);
             uart_changeLine();
 
             /* Log-Messages */
@@ -315,7 +318,7 @@ ISR(PCINT2_vect)
         else
         {
             /* Printing Received-Bits-String */
-            printBit(rCrcBuffer, SIZE_OF_CRC);
+            printBit(rFrame->crc, SIZE_OF_CRC);
             uart_transmit('\r');
             uart_changeLine();
 
@@ -328,18 +331,16 @@ ISR(PCINT2_vect)
         
         /* Initialization for the next cycle */
         *rQueue = 0x00;
-        for(int i=0; i<4; i++) {rCrcBuffer[i] = 0x00;}
-        rDlcBuffer[0] = 0x00;
-        for(int i=0; i<4; i++) {rPayloadBuffer[i] = 0x00;}
+        //frame_clear(rFrame);
         rCounter = 0;
-        rFlag = FLAG_DETECTING_PREAMBLE;
+        rFlag = FLAG_PROCESSING_DATA;
     }
     
     ////////////////////////////////////////////////////////
     // STEP8. LAYER3
-    else if(tFlag == FLAG_PROCESSING_DATA)
+    else if(rFlag == FLAG_PROCESSING_DATA)
     {
-        //layer3(frame);
+        layer3(rFrame);
     }
 }
 
