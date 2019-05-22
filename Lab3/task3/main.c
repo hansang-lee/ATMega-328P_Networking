@@ -1,5 +1,5 @@
 #include "io.c"
-#include "interrupt.h"
+#include "interrupt.c"
 #include <util/delay.h>
 
 /********************************************************************************
@@ -26,7 +26,7 @@
  ********************************************************************************/
 int main()
 {
-    //frame_init(rFrame);
+    frame_init(rFrame);
 
 	io_init();
 	cli();

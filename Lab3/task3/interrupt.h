@@ -17,28 +17,29 @@
 #define INTERRUPT_PERIOD            100
 
 /* Flags at Transmitter Part */
-#define FLAG_GENERATING_CRC         0
-#define FLAG_SENDING_PREAMBLE       1
-#define FLAG_SENDING_DESTINATION    2
-#define FLAG_SENDING_SOURCE         3
-#define FLAG_SENDING_CRC            4
-#define FLAG_SENDING_DLC            5
-#define FLAG_SENDING_PAYLOAD        6
+#define FLAG_GENERATING_CRC         100
+#define FLAG_SENDING_PREAMBLE       101
+#define FLAG_SENDING_DESTINATION    102
+#define FLAG_SENDING_SOURCE         103
+#define FLAG_SENDING_CRC            104
+#define FLAG_SENDING_DLC            105
+#define FLAG_SENDING_PAYLOAD        106
 
 /* Flags at Receiver Part */
-#define FLAG_DETECTING_PREAMBLE     0
-#define FLAG_RECEIVING_DESTINATION  1
-#define FLAG_RECEIVING_SOURCE       2
-#define FLAG_RECEIVING_CRC          3
-#define FLAG_RECEIVING_DLC          4
-#define FLAG_RECEIVING_PAYLOAD      5
-#define FLAG_CHECKING_CRC           6
+#define FLAG_DETECTING_PREAMBLE     200
+#define FLAG_RECEIVING_DESTINATION  201
+#define FLAG_RECEIVING_SOURCE       202
+#define FLAG_RECEIVING_CRC          203
+#define FLAG_RECEIVING_DLC          204
+#define FLAG_RECEIVING_PAYLOAD      205
+#define FLAG_CHECKING_CRC           206
+#define FLAG_PROCESSING_DATA        207
 
 #define SIZE_OF_PREAMBLE            8
 #define SIZE_OF_CRC                 32
 #define SIZE_OF_DLC                 8
 #define SIZE_OF_POLYNOMIAL          33
-#define SIZE_OF_PAYLOAD             32 //2008
+#define SIZE_OF_PAYLOAD             32
 #define SIZE_OF_ADDRESS             8
 
 #define MY_ID                       0x0f
@@ -84,14 +85,14 @@ volatile uint32_t timerB = 0;
 volatile uint32_t rFlag = FLAG_DETECTING_PREAMBLE;
 volatile uint32_t rCounter = 0;
 
-//frame_t* rFrame;
+frame_t* rFrame;
 
 uint8_t rQueue[(SIZE_OF_PREAMBLE/8)]        = { 0 };
-uint8_t rDestination[(SIZE_OF_ADDRESS/8)]   = { 0 };
-uint8_t rSource[(SIZE_OF_ADDRESS/8)]        = { 0 };
-uint8_t rCrcBuffer[(SIZE_OF_CRC/8)]         = { 0 };
-uint8_t rDlcBuffer[(SIZE_OF_DLC/8)]         = { 0 };
-uint8_t rPayloadBuffer[(SIZE_OF_PAYLOAD/8)] = { 0 };
+//uint8_t rDestination[(SIZE_OF_ADDRESS/8)]   = { 0 };
+//uint8_t rSource[(SIZE_OF_ADDRESS/8)]        = { 0 };
+//uint8_t rCrcBuffer[(SIZE_OF_CRC/8)]         = { 0 };
+//uint8_t rDlcBuffer[(SIZE_OF_DLC/8)]         = { 0 };
+//uint8_t rPayloadBuffer[(SIZE_OF_PAYLOAD/8)] = { 0 };
 
 const uint8_t logMsg_preamble[18]  = "Preamble Detected";
 const uint8_t logMsg_dst[20]       = "Destination Received";
