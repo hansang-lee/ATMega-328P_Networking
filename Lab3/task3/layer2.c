@@ -1,142 +1,12 @@
 #pragma once
-#include <avr/interrupt.h>
 #include "interrupt.h"
 #include "crc.h"
 #include "uart.h"
-#include "layer3.c"
 
-/* Transmitter Interrupt */
-ISR(TIMER0_COMPA_vect)
-{
-	if ((timerA++) > INTERRUPT_PERIOD)
-	{
-		timerA = 0;
-        
-        ////////////////////////////////////////////////////////
-        // STEP1. GENERATING CRC
-        if(tFlag == FLAG_GENERATING_CRC)
-        {
-            /* Initializes CRC Buffer */
-            for(int i=0; i<(SIZE_OF_CRC/8); i++)
-                tCrcBuffer[i] = 0x00;
+#define FLAG_DETECTING_PREAMBLE     0
+#define FLAG_
 
-            /* Calculates CRC */
-            generateCrc(
-                    tCrcBuffer,         // destination
-                    tPayloadBuffer,     // source
-                    *tDlcBuffer,        // source_size
-                    _polynomial);       // polynomial
-       
-            /* Initialization for the next flag */
-            tCounter = 0;
-            tFlag = FLAG_SENDING_PREAMBLE;
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP2. SENDING PREAMBLE
-        else if(tFlag == FLAG_SENDING_PREAMBLE)
-        {
-            /* Sending Preamble */
-            if(readBit(_preamble, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending Preamble */
-            if((++tCounter) >= SIZE_OF_PREAMBLE)
-            {
-                /* Initialization for the next flag */
-                tCounter = 0;
-                tFlag = FLAG_SENDING_DESTINATION;
-            }
-        }
-
-
-        ////////////////////////////////////////////////////////
-        // STEP3. SENDING DESTINATION ADDRESS
-        else if(tFlag == FLAG_SENDING_DESTINATION)
-        {
-            /* Sending Destination */
-            if(readBit(tDestination, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending Destination */
-            if((++tCounter) >= SIZE_OF_ADDRESS)
-            {
-                tCounter = 0;
-                tFlag = FLAG_SENDING_SOURCE;
-            }
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP4. SENDING SOURCE ADDRESS
-        else if(tFlag == FLAG_SENDING_SOURCE)
-        {
-            /* Sending Source */
-            if(readBit(tSource, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending Source */
-            if((++tCounter) >= SIZE_OF_ADDRESS)
-            {
-                tCounter = 0;
-                tFlag = FLAG_SENDING_CRC;
-            }
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP5. SENDING CRC
-        else if(tFlag == FLAG_SENDING_CRC)
-        {
-            /* Sending CRC */
-            if(readBit(tCrcBuffer, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-            
-            /* Finished Sending CRC */
-            if((++tCounter) >= SIZE_OF_CRC)
-            {
-                /* Initialization for the next flag */
-                tCounter = 0;
-                tFlag = FLAG_SENDING_DLC;
-            }
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP6. SENDING DLC
-        else if(tFlag == FLAG_SENDING_DLC)
-        {
-            /* Sending DLC */
-            if(readBit(tDlcBuffer, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending DLC */
-            if((++tCounter) >= SIZE_OF_DLC)
-            {
-                /* Initialization for the next flag */
-                tCounter = 0;
-                tFlag = FLAG_SENDING_PAYLOAD;
-            }
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP7. SENDING PAYLOAD
-        else if(tFlag == FLAG_SENDING_PAYLOAD)
-        {
-            /* Sending Payload */
-            if(readBit(tPayloadBuffer, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-            
-            /* Finished Sending Payload */
-            if((++tCounter) >= SIZE_OF_PAYLOAD)
-            {
-                /* Initialization for the next flag */
-                tCounter = 0;
-                tFlag = 9999;//FLAG_SENDING_PREAMBLE;
-            }
-        }
-	}
-}
-
-/* Receiver Pin-Change-Interrupt */
-ISR(PCINT2_vect)
+void layer2(frame_t* frame)
 {
     ////////////////////////////////////////////////////////
     // STEP1. DETECTING PREAMBLE
@@ -279,11 +149,11 @@ ISR(PCINT2_vect)
         updateBit(rFrame->payload, rCounter, receiveData());
         
         /* Printing Received-Bits-String */
-        printBit(rFrame->payload, *(rFrame->dlc));
+        printBit(rFrame->payload, SIZE_OF_PAYLOAD);
         uart_transmit('\r');
 
         /* Finished Receiving PAYLOAD */
-        if((++rCounter) >= (*(rFrame->dlc)))
+        if((++rCounter) >= SIZE_OF_PAYLOAD)
         {
             /* Log-Messages */
             uart_changeLine();
@@ -341,18 +211,4 @@ ISR(PCINT2_vect)
     {
         layer3(rFrame);
     }
-}
-
-/* Clock Signal Interrupt */
-ISR(TIMER0_COMPB_vect)
-{
-	if ((timerB++) > INTERRUPT_PERIOD)
-	{
-		timerB = 0;
-		
-        ////////////////////////////////////////////////////////
-		/* CLOCK SIGNAL TRANSMIT */
-		PIN_CHANGE();
-        ////////////////////////////////////////////////////////
-	}
 }

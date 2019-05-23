@@ -13,7 +13,7 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            100
+#define INTERRUPT_PERIOD            10
 
 /* Flags at Transmitter Part */
 #define FLAG_GENERATING_CRC         100
@@ -38,7 +38,7 @@
 #define SIZE_OF_CRC                 32
 #define SIZE_OF_DLC                 8
 #define SIZE_OF_POLYNOMIAL          33
-#define SIZE_OF_PAYLOAD             32
+#define SIZE_OF_PAYLOAD             2008
 #define SIZE_OF_ADDRESS             8
 
 
