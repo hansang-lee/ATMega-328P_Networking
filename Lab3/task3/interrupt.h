@@ -13,7 +13,7 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            10
+#define INTERRUPT_PERIOD            100
 
 /* Flags at Transmitter Part */
 #define FLAG_GENERATING_CRC         100
@@ -44,8 +44,6 @@
 
 typedef struct
 {
-    uint8_t dst[(SIZE_OF_ADDRESS/8)];      // 1
-    uint8_t src[(SIZE_OF_ADDRESS/8)];      // 1
     uint8_t crc[(SIZE_OF_CRC/8)];          // 4
     uint8_t dlc[(SIZE_OF_DLC/8)];          // 1
     uint8_t payload[(SIZE_OF_PAYLOAD/8)];  // 2008
@@ -64,7 +62,7 @@ volatile uint32_t tCounter = 0;
 uint8_t tDestination[(SIZE_OF_ADDRESS/8)]     = { 0x0f };
 const uint8_t tSource[(SIZE_OF_ADDRESS/8)]    = { 0x0f };
 uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0 };
-uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0x20 };
+uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0x30 };
 uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0x74, 0x65, 0x73, 0x74 };
 
 
@@ -94,8 +92,6 @@ void frame_init(frame_t* frame)
 
 void frame_clear(frame_t* frame)
 {
-    for(int i=0; i<(SIZE_OF_ADDRESS/8); i++) {frame->dst[i] = 0x00;}
-    for(int i=0; i<(SIZE_OF_ADDRESS/8); i++) {frame->src[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_CRC/8); i++) {frame->crc[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_DLC/8); i++) {frame->dlc[i] = 0x00;}
     for(int i=0; i<(SIZE_OF_PAYLOAD/8); i++) {frame->payload[i] = 0x00;}

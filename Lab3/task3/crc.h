@@ -74,6 +74,38 @@ uint16_t checkPreamble(const uint8_t preambleBuffer)
     return 0;
 }
 
+void leftShift(uint8_t* bitstring, uint32_t size, uint8_t times)
+{
+    for(int k=0; k<times; k++)
+    {
+        /* Every Element does Left-Shift byte-by-byte */
+        for(int i=0; i<(size/8); i++)
+        {
+            if(readBit(&bitstring[i], 0))
+            {
+                (!((i-1)<0))?(bitstring[i-1]+=0x01):(0);
+            }
+            bitstring[i] &= 0b01111111;
+            bitstring[i] <<= 1;
+        }
+    }
+}
+
+void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
+{
+    for(int t=0; t<times; t++)
+    {
+        for(int i=((size/8)-1); i>=0; i++)
+        {
+            if(((size/8)>(i+1)))
+            {
+                bitstring[i+1] = 0x00;
+                bitstring[i+1] = bitstring[i];
+            }
+        }
+    }
+}
+
 /* Generates CRC from source and copies the result to destination */
 void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {

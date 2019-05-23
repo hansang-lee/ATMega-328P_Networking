@@ -26,7 +26,6 @@
 int main()
 {
     frame_init(rFrame);
-    //frame_clear(&rFrame);
 
 	io_init();
 	cli();

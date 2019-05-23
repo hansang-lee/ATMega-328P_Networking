@@ -11,7 +11,7 @@ void layer3(frame_t* frame)
     /* CASE 1. Broadcast ID 
      *  1. Receive the packet
      *  2. Relay the packet to the next node */
-    if(frame->dst[0] == BROADCAST_ID)
+    if(frame->payload[0] == BROADCAST_ID)
     {
         uart_transmit('A');
     }
@@ -19,7 +19,7 @@ void layer3(frame_t* frame)
     /* CASE 2. My ID
      * 1. Receive the packet
      * 2. Send the ACK back to the source address */
-    else if(frame->dst[0] == MY_ID)
+    else if(frame->payload[0] == MY_ID)
     {
         uart_transmit('B');
     }

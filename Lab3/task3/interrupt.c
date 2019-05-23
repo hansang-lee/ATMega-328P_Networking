@@ -21,6 +21,10 @@ ISR(TIMER0_COMPA_vect)
                 tCrcBuffer[i] = 0x00;
 
             /* Calculates CRC */
+            rightShift(tPayloadBuffer, *tDlcBuffer, 2);
+            tPayloadBuffer[0] = *tDestination;
+            tPayloadBuffer[1] = *tSource;
+
             generateCrc(
                     tCrcBuffer,         // destination
                     tPayloadBuffer,     // source
@@ -45,45 +49,12 @@ ISR(TIMER0_COMPA_vect)
             {
                 /* Initialization for the next flag */
                 tCounter = 0;
-                tFlag = FLAG_SENDING_DESTINATION;
-            }
-        }
-
-
-        ////////////////////////////////////////////////////////
-        // STEP3. SENDING DESTINATION ADDRESS
-        else if(tFlag == FLAG_SENDING_DESTINATION)
-        {
-            /* Sending Destination */
-            if(readBit(tDestination, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending Destination */
-            if((++tCounter) >= SIZE_OF_ADDRESS)
-            {
-                tCounter = 0;
-                tFlag = FLAG_SENDING_SOURCE;
-            }
-        }
-
-        ////////////////////////////////////////////////////////
-        // STEP4. SENDING SOURCE ADDRESS
-        else if(tFlag == FLAG_SENDING_SOURCE)
-        {
-            /* Sending Source */
-            if(readBit(tSource, tCounter)) SEND_DATA_ONE();
-            else SEND_DATA_ZERO();
-
-            /* Finished Sending Source */
-            if((++tCounter) >= SIZE_OF_ADDRESS)
-            {
-                tCounter = 0;
                 tFlag = FLAG_SENDING_CRC;
             }
         }
 
         ////////////////////////////////////////////////////////
-        // STEP5. SENDING CRC
+        // STEP3. SENDING CRC
         else if(tFlag == FLAG_SENDING_CRC)
         {
             /* Sending CRC */
@@ -100,7 +71,7 @@ ISR(TIMER0_COMPA_vect)
         }
 
         ////////////////////////////////////////////////////////
-        // STEP6. SENDING DLC
+        // STEP4. SENDING DLC
         else if(tFlag == FLAG_SENDING_DLC)
         {
             /* Sending DLC */
@@ -117,7 +88,7 @@ ISR(TIMER0_COMPA_vect)
         }
 
         ////////////////////////////////////////////////////////
-        // STEP7. SENDING PAYLOAD
+        // STEP5. SENDING PAYLOAD
         else if(tFlag == FLAG_SENDING_PAYLOAD)
         {
             /* Sending Payload */
@@ -161,64 +132,13 @@ ISR(PCINT2_vect)
 
             /* Initialization for the next cycle */
             rCounter = 0;
-            rFlag = FLAG_RECEIVING_DESTINATION;
-        }
-    }
-
-    ////////////////////////////////////////////////////////
-    // STEP2. RECEIVING DESTINATION ADDRESS
-    else if(rFlag == FLAG_RECEIVING_DESTINATION)
-    {
-        /* Receiving Data */
-        updateBit(rFrame->dst, rCounter, receiveData());
-
-        /* Printing Received-Bits-String */
-        printBit(rFrame->dst, SIZE_OF_ADDRESS);
-        uart_transmit('\r');
-
-        if((++rCounter) >= SIZE_OF_ADDRESS)
-        {
-            /* Log-Messages */
-            uart_changeLine();
-            uart_transmit(' ');
-            printMsg(logMsg_dst, 20);
-            uart_changeLine();
-            uart_changeLine();
-
-            /* Initialization for the next cycle */
-            rCounter = 0;
-            rFlag = FLAG_RECEIVING_SOURCE;
-        }
-    }
-
-    ////////////////////////////////////////////////////////
-    // STEP3. RECEIVING SOURCE ADDRESS
-    else if(rFlag == FLAG_RECEIVING_SOURCE)
-    {
-        /* Receiving Data */
-        updateBit(rFrame->src, rCounter, receiveData());
-
-        /* Printing Received-Bits-String */
-        printBit(rFrame->src, SIZE_OF_ADDRESS);
-        uart_transmit('\r');
-
-        if((++rCounter) >= SIZE_OF_ADDRESS)
-        {
-            /* Log-Messages */
-            uart_changeLine();
-            uart_transmit(' ');
-            printMsg(logMsg_src, 15);
-            uart_changeLine();
-            uart_changeLine();
-            
-            /* Initialization for the next cycle */
-            rCounter = 0;
             rFlag = FLAG_RECEIVING_CRC;
         }
     }
 
+
     ////////////////////////////////////////////////////////
-    // STEP4. RECEIVING CRC
+    // STEP2. RECEIVING CRC
     else if(rFlag == FLAG_RECEIVING_CRC)
     {
         /* Receiving Data */
@@ -245,7 +165,7 @@ ISR(PCINT2_vect)
     }
 
     ////////////////////////////////////////////////////////
-    // STEP5. RECEIVING DLC
+    // STEP3. RECEIVING DLC
     else if(rFlag == FLAG_RECEIVING_DLC)
     {
         /* Receiving Data */
@@ -272,7 +192,7 @@ ISR(PCINT2_vect)
     }
 
     ////////////////////////////////////////////////////////
-    // STEP6. RECEIVING PAYLOAD
+    // STEP4. RECEIVING PAYLOAD
     else if(rFlag == FLAG_RECEIVING_PAYLOAD)
     {
         /* Receiving Data */
@@ -299,7 +219,7 @@ ISR(PCINT2_vect)
     }
 
     ////////////////////////////////////////////////////////
-    // STEP7. CHECKING CRC
+    // STEP5. CHECKING CRC
     else if(rFlag == FLAG_CHECKING_CRC)
     {
         /* Checks CRC and Sets Flag */
@@ -336,7 +256,7 @@ ISR(PCINT2_vect)
     }
     
     ////////////////////////////////////////////////////////
-    // STEP8. LAYER3
+    // STEP6. LAYER3
     else if(rFlag == FLAG_PROCESSING_DATA)
     {
         layer3(rFrame);
