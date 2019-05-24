@@ -1,12 +1,5 @@
 #pragma once
-#include <stdlib.h>
 #include "uart.h"
-
-#define NO_ERROR        0
-#define ERROR_OCCUR     1
-#define TRUE            0
-#define FALSE           1
-#define PREAMBLE        0x7e
 
 /* Print log-messages */
 void printMsg(const uint8_t* msg, const uint8_t length)
@@ -67,30 +60,14 @@ void printBit(const uint8_t* buffer, const uint32_t bits)
 }
 
 /* Check the 8-bits-data is equivalent to the Preamble */
-uint16_t checkPreamble(const uint8_t preambleBuffer)
+uint16_t checkPreamble(const uint8_t preambleBuffer, const uint8_t _preamble)
 {
-    if((preambleBuffer ^ PREAMBLE) == 0)
+    if((preambleBuffer ^ _preamble) == 0)
         return 1;
     return 0;
 }
 
-void leftShift(uint8_t* bitstring, uint32_t size, uint8_t times)
-{
-    for(int k=0; k<times; k++)
-    {
-        /* Every Element does Left-Shift byte-by-byte */
-        for(int i=0; i<(size/8); i++)
-        {
-            if(readBit(&bitstring[i], 0))
-            {
-                (!((i-1)<0))?(bitstring[i-1]+=0x01):(0);
-            }
-            bitstring[i] &= 0b01111111;
-            bitstring[i] <<= 1;
-        }
-    }
-}
-
+/* Right-Shift Byte by Byte */
 void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
 {
     for(int t=0; t<times; t++)
@@ -210,4 +187,12 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
         return 1;
     else
         return 0;
+}
+
+void bufferClear(uint8_t* bitstring, uint32_t bit_size)
+{
+    for(int i=0; i<(bit_size/8); i++)
+    {
+        bitstring[i] = 0x00;
+    }
 }
