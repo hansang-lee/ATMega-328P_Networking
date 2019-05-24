@@ -34,45 +34,38 @@
 #define FLAG_CHECKING_CRC           206
 #define FLAG_PROCESSING_DATA        207
 
-/* Size of Buffer */
-#define SIZE_OF_PREAMBLE            8
-#define SIZE_OF_CRC                 32
-#define SIZE_OF_DLC                 8
-#define SIZE_OF_POLYNOMIAL          33
-#define SIZE_OF_PAYLOAD             2008
-#define SIZE_OF_ADDRESS             8
-
 /* Packet Format */
 typedef struct
 {
-    uint8_t crc[(SIZE_OF_CRC/8)];          // 4
-    uint8_t dlc[(SIZE_OF_DLC/8)];          // 1
-    uint8_t payload[(SIZE_OF_PAYLOAD/8)];  // 2008
+    uint8_t crc[4];
+    uint8_t dlc[1];
+    uint8_t payload[251];
 } frame_t;
 
-/* Global Variables */
-uint8_t _polynomial[5]  = { 0x82, 0x60, 0x8e, 0xdb, 0x80 };
-uint8_t _preamble[1]    = { 0x7e };
+/* Fixed Variables for Checking */
+const uint8_t _polynomial[5]  = { 0x82, 0x60, 0x8e, 0xdb, 0x80 };
+const uint8_t _preamble[1]    = { 0x7e };
 
-/* TRANSMITTER */
-volatile uint32_t timerA = (INTERRUPT_PERIOD/2);
-volatile uint32_t tFlag = FLAG_GENERATING_CRC;
-volatile uint32_t tCounter = 0;
-uint8_t tDestination[(SIZE_OF_ADDRESS/8)]     = { 0x0f };
-const uint8_t tSource[(SIZE_OF_ADDRESS/8)]    = { 0x0f };
-uint8_t tCrcBuffer[(SIZE_OF_CRC/8)]           = { 0 };
-uint8_t tDlcBuffer[(SIZE_OF_DLC/8)]           = { 0x30 };
-uint8_t tPayloadBuffer[(SIZE_OF_PAYLOAD/8)]   = { 0x74, 0x65, 0x73, 0x74 };
+/* Timers for Interrupts */
+volatile uint32_t timerA    = (INTERRUPT_PERIOD/2);
+volatile uint32_t timerB    = 0;
+
+/* Flags */
+//volatile uint32_t tFlag     = FLAG_GENERATING_CRC;
+volatile uint32_t rFlag     = FLAG_DETECTING_PREAMBLE;
+
+/* Counters */
+//volatile uint32_t tCounter  = 0;
+volatile uint32_t rCounter  = 0;
 
 /* RECEIVER */
-volatile uint32_t timerB = 0;
-volatile uint32_t rFlag = FLAG_DETECTING_PREAMBLE;
-volatile uint32_t rCounter = 0;
-uint8_t rQueue[(SIZE_OF_PREAMBLE/8)] = { 0 };
-frame_t* rFrame;
-frame_t _rFrame;
+uint8_t rQueue[1]           = { 0 };
 
-/* Messages */
+/* Receiver's- and Transmitter's- Packet */
+frame_t* rFrame; frame_t _rFrame;
+frame_t* tFrame; frame_t _tFrame;
+
+/* Messages to print on Minicom */
 const uint8_t logMsg_preamble[18]  = "Preamble Detected";
 const uint8_t logMsg_dst[20]       = "Destination Received";
 const uint8_t logMsg_src[15]       = "Source Received";

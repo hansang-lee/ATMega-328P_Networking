@@ -87,7 +87,7 @@ void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
 void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
-    uint32_t payload_size = (src_size + SIZE_OF_CRC);
+    uint32_t payload_size = (src_size + 32);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
     /* Copies the payload to the temporary variable */
@@ -117,7 +117,7 @@ void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, cons
         /* Payload MSB is 1 : XOR */
         else
         {
-            for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
+            for(int i=0; i<33; i++)
             {
                 writeBit(payload, i, (readBit(payload,i)^(readBit(pln,i))));
             }
@@ -125,7 +125,7 @@ void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, cons
     }
 
     /* Copies the generated CRC to the destination */
-    for(int i=0; i<(SIZE_OF_CRC/8); i++)
+    for(int i=0; i<(32/8); i++)
     {
         crc[i] = payload[i];
     }
@@ -136,7 +136,7 @@ void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, cons
 int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
-    uint32_t payload_size = (src_size + SIZE_OF_CRC);
+    uint32_t payload_size = (src_size + 32);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
     /* Copies the payload to the temporary variable */
@@ -166,7 +166,7 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
         /* Payload MSB is 1 : XOR */
         else
         {
-            for(int i=0; i<SIZE_OF_POLYNOMIAL; i++)
+            for(int i=0; i<33; i++)
             {
                 writeBit(payload, i, (readBit(payload,i)^(readBit(pln,i))));
             }
@@ -175,7 +175,7 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
 
     /* Copies the generated CRC to the destination */
     int result=0;
-    for(int i=0; i<(SIZE_OF_CRC/8); i++)
+    for(int i=0; i<4; i++)
     {
         crc[i] = payload[i];
         result += payload[i];

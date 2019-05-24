@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "calc.h"
 #include "uart.h"
+#include "dummy_transmit.c"
 #include "layer3.c"
 
 /* Interrupt A - Transmitter */
@@ -11,9 +12,10 @@ ISR(TIMER0_COMPA_vect)
 	if ((timerA++) > INTERRUPT_PERIOD)
 	{
 		timerA = 0;
-        
-        /* STEP1. GENERATING CRC */
-        if(tFlag == FLAG_GENERATING_CRC)
+        dummyTransmit();
+       
+        // STEP1. GENERATING CRC
+        /*if(tFlag == FLAG_GENERATING_CRC)
         {
             bufferClear(tCrcBuffer, 32);
             rightShift(tPayloadBuffer, *tDlcBuffer, 2);
@@ -25,7 +27,7 @@ ISR(TIMER0_COMPA_vect)
             tFlag = FLAG_SENDING_PREAMBLE;
         }
 
-        /* STEP2. SENDING PREAMBLE */
+        // STEP2. SENDING PREAMBLE
         else if(tFlag == FLAG_SENDING_PREAMBLE)
         {
             if(readBit(_preamble, tCounter)) SEND_DATA_ONE();
@@ -38,7 +40,7 @@ ISR(TIMER0_COMPA_vect)
             }
         }
 
-        /* STEP3. SENDING CRC */
+        // STEP3. SENDING CRC
         else if(tFlag == FLAG_SENDING_CRC)
         {
             if(readBit(tCrcBuffer, tCounter)) SEND_DATA_ONE();
@@ -51,7 +53,7 @@ ISR(TIMER0_COMPA_vect)
             }
         }
 
-        /* STEP4. SENDING DLC */
+        // STEP4. SENDING DLC
         else if(tFlag == FLAG_SENDING_DLC)
         {
             if(readBit(tDlcBuffer, tCounter)) SEND_DATA_ONE();
@@ -64,7 +66,7 @@ ISR(TIMER0_COMPA_vect)
             }
         }
 
-        /* STEP5. SENDING PAYLOAD */
+        // STEP5. SENDING PAYLOAD
         else if(tFlag == FLAG_SENDING_PAYLOAD)
         {
             if(readBit(tPayloadBuffer, tCounter)) SEND_DATA_ONE();
@@ -75,7 +77,7 @@ ISR(TIMER0_COMPA_vect)
                 tCounter = 0;
                 tFlag = 9999;
             }
-        }
+        }*/
 	}
 }
 
@@ -110,7 +112,7 @@ ISR(PCINT2_vect)
 
         if((++rCounter) >= 32)
         {
-            printBit(rFrame->crc, SIZE_OF_CRC);
+            printBit(rFrame->crc, 32);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -128,9 +130,9 @@ ISR(PCINT2_vect)
     {
         updateBit(rFrame->dlc, rCounter, receiveData());
         
-        if((++rCounter) >= SIZE_OF_DLC)
+        if((++rCounter) >= 8)
         {
-            printBit(rFrame->dlc, SIZE_OF_DLC);
+            printBit(rFrame->dlc, 8);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -168,7 +170,7 @@ ISR(PCINT2_vect)
     {
         if((checkCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
         {
-            printBit(rFrame->crc, SIZE_OF_CRC);
+            printBit(rFrame->crc, 32);
             uart_changeLine();
             uart_transmit(' ');
             printMsg(logMsg_crc_true, 14);
@@ -177,7 +179,7 @@ ISR(PCINT2_vect)
         }
         else
         {
-            printBit(rFrame->crc, SIZE_OF_CRC);
+            printBit(rFrame->crc, 32);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
