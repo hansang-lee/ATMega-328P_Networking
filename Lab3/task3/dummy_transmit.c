@@ -4,10 +4,10 @@
 #include "uart.c"
 
 uint8_t tCrcBuffer[4]       = { 0 };
-uint8_t tDlcBuffer[1]       = { 0x30 };
+uint8_t tDlcBuffer[1]       = { 0x20 };
 uint8_t tPayloadBuffer[251] = { 0x74, 0x65, 0x73, 0x74 };
-uint8_t tDestination[1]     = { 0x0f };
-uint8_t tSource[1]          = { 0x0f };
+uint8_t tDestination[1]     = { 0x00 };
+uint8_t tSource[1]          = { 0x0e };
 uint32_t tFlag = FLAG_GENERATING_CRC;
 uint8_t tCounter = 0;
 
@@ -20,6 +20,7 @@ void dummyTransmit()
         rightShift(tPayloadBuffer, *tDlcBuffer, 2);
         tPayloadBuffer[0] = *tDestination;
         tPayloadBuffer[1] = *tSource;
+        *tDlcBuffer += 0x10;
         generateCrc(tCrcBuffer, tPayloadBuffer, *tDlcBuffer, _polynomial);
        
         tCounter = 0;

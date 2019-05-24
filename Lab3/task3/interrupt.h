@@ -90,3 +90,10 @@ void pin_change_setup()
 	PCMSK2 |= (1 << PCINT19);
 	PCICR |= (1 << PCIE2);
 }
+
+void clearFrame(frame_t* frame)
+{
+    for(int i=0; i<4; i++) {frame->crc[i] = 0x00;}
+    frame->dlc[0] = 0x00;
+    for(int i=0; i<251; i++) {frame->payload[i] = 0x00;}
+}

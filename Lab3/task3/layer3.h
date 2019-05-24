@@ -5,10 +5,10 @@
 #define PRE_NODE_ID     0x09
 #define NEXT_NODE_ID    0x09
 
-//const uint8_t msg_turnBack[27]  = "The Message Has Turned Back";
-//const uint8_t msg_broadcast[17] = "BroadCast Message";
-//const uint8_t msg_toHere[13]    = "Message To Me";
-//const uint8_t msg_toAnother[18] = "Message To Another";
+const uint8_t msg_turnBack[27]  = "The Message Has Turned Back";
+const uint8_t msg_broadcast[17] = "BroadCast Message";
+const uint8_t msg_toHere[13]    = "Message To Me";
+const uint8_t msg_toAnother[18] = "Message To Another";
 
 /* *****************************************************
  * Return Value

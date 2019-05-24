@@ -1,5 +1,6 @@
 #pragma once
 #include <avr/interrupt.h>
+#include <stdlib.h>
 #include "interrupt.h"
 #include "calc.c"
 #include "uart.c"
@@ -91,7 +92,7 @@ ISR(PCINT2_vect)
 
         if(checkPreamble(*rQueue, *_preamble))
         {
-            printBit(rQueue, 8);
+            printBit(rQueue, 0, 8);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -112,7 +113,7 @@ ISR(PCINT2_vect)
 
         if((++rCounter) >= 32)
         {
-            printBit(rFrame->crc, 32);
+            printBit(rFrame->crc, 0, 32);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -132,7 +133,7 @@ ISR(PCINT2_vect)
         
         if((++rCounter) >= 8)
         {
-            printBit(rFrame->dlc, 8);
+            printBit(rFrame->dlc, 0, 8);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -150,16 +151,23 @@ ISR(PCINT2_vect)
     {
         updateBit(rFrame->payload, rCounter, receiveData());
 
-        if((++rCounter) >= (*(rFrame->dlc)))
+        if((++rCounter) >= *(rFrame->dlc))
         {
-            printBit(rFrame->payload, *(rFrame->dlc));
-            uart_transmit('\r');
-            uart_changeLine();
-            uart_transmit(' ');
-            printMsg(logMsg_payload, 16);
-            uart_changeLine();
-            uart_changeLine();
+            printBit(rFrame->payload, 0, 8);
+            uart_transmit('\r'); uart_changeLine(); uart_transmit(' ');
+            printMsg(logMsg_dst, 20);
+            uart_changeLine(); uart_changeLine();
             
+            printBit(rFrame->payload, 8, 16);
+            uart_transmit('\r'); uart_changeLine(); uart_transmit(' ');
+            printMsg(logMsg_src, 15);
+            uart_changeLine(); uart_changeLine();
+
+            printBit(rFrame->payload, 16, *(rFrame->dlc));
+            uart_transmit('\r'); uart_changeLine(); uart_transmit(' ');
+            printMsg(logMsg_payload, 17);
+            uart_changeLine(); uart_changeLine();
+
             rCounter = 0;
             rFlag = FLAG_CHECKING_CRC;
         }
@@ -170,7 +178,7 @@ ISR(PCINT2_vect)
     {
         if((checkCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
         {
-            printBit(rFrame->crc, 32);
+            printBit(rFrame->crc, 0, 32);
             uart_changeLine();
             uart_transmit(' ');
             printMsg(logMsg_crc_true, 14);
@@ -179,7 +187,7 @@ ISR(PCINT2_vect)
         }
         else
         {
-            printBit(rFrame->crc, 32);
+            printBit(rFrame->crc, 0, 32);
             uart_transmit('\r');
             uart_changeLine();
             uart_transmit(' ');
@@ -195,10 +203,29 @@ ISR(PCINT2_vect)
     /* STEP6. LAYER3 - Check Destination and Source */
     else if(rFlag == FLAG_LAYER_3)
     {
-        if(checkAddress(rFrame) == 0)
-            uart_transmit('M');
-        uart_changeLine();
-        rFlag = FLAG_DETECTING_PREAMBLE;
+        switch(checkAddress(rFrame))
+        {
+            case 0: // Message Turned Back to Transmitter
+                printMsg(msg_turnBack, 27); // Show Error
+                clearFrame(rFrame); // Clear Buffer
+                break;
+
+            case 1: // Broadcast Message
+                //frame_t* packet = (frame_t*) calloc(1, sizeof(frame_t)); // Layer4
+                *tFrame = *rFrame;// Relay Message
+                // tFalg
+                break;
+
+            case 2: // Correct Message to Me
+                // Layer4
+                // Clear Buffer
+                break;
+
+            case 3: // Another Nodes' Message
+                // Relay Message
+                // Clear Buffer
+                break;
+        }
     }
 }
 

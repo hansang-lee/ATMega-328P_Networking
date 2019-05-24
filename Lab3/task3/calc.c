@@ -50,9 +50,9 @@ void updateBit(uint8_t* buffer, const uint32_t pos, const uint8_t data)
 }
 
 /* Prints the 8-bits-string */
-void printBit(const uint8_t* buffer, const uint32_t bits)
+void printBit(const uint8_t* buffer, const uint32_t from, const uint32_t to)
 {
-    for(int i=0; i<bits; i++)
+    for(int i=from; i<to; i++)
     {
         if((i%8)==0) {uart_transmit(' ');}
         if(buffer[(i/8)] & (0b10000000 >> (i%8))) {uart_transmit('1');}
@@ -73,14 +73,15 @@ void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
 {
     for(int t=0; t<times; t++)
     {
-        for(int i=((size/8)-1); i>=0; i++)
+        for(int i=((size/8)-1+t); i>=0; i--)
         {
-            if(((size/8)>(i+1)))
+            if((251>(i+1)))
             {
                 bitstring[i+1] = 0x00;
                 bitstring[i+1] = bitstring[i];
             }
         }
+        bitstring[0] = 0x00;
     }
 }
 
