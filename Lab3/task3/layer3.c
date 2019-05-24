@@ -5,29 +5,43 @@
 
 uint8_t checkAddress(const frame_t* frame)
 {
-    // CASE 0. Turn the message back
-    if(frame->payload[1] == MY_ID)
+    uint8_t result = 4;
+
+    switch(frame->payload[1])
     {
-        return 0;
+        /* Transmitter of Message is ME */
+        case MY_ID:
+            result = 0;
+            break;
+        
+        /* Transmitter of Message is Pre-Node */
+        case PRE_NODE_ID:
+ 
+            // Broadcast Message
+            if(frame->payload[0] == BROADCAST_ID)
+            {
+                result = 1;
+            }
+ 
+            // Message To Me
+            else if(frame->payload[0] == MY_ID)
+            {
+                result = 2;
+            }
+ 
+            // Message To Another Nodes
+            else
+            {
+                result = 3;
+            }
+            break;
+        
+        /* Transmitter of Message is Next-Node */
+        //case NEXT_NODE_ID:
+        //    break;
     }
 
-    // CASE 1. Broadcast ID 
-    else if(frame->payload[0] == BROADCAST_ID)
-    {
-        return 1;
-    }
-
-    // CASE 2. My ID
-    else if(frame->payload[0] == MY_ID)
-    {
-        return 2;
-    }
-
-    // CASE 3. Another IDs
-    else
-    {
-        return 3;
-    }
+    return result;
 }
 
 void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src)

@@ -13,16 +13,14 @@ ISR(TIMER0_COMPA_vect)
 	if ((timerA++) > INTERRUPT_PERIOD)
 	{
 		timerA = 0;
-        dummyTransmit();
+        if(tFlag == FLAG_TMP)
+           dummyTransmit();
        
         // STEP1. GENERATING CRC
-        /*if(tFlag == FLAG_GENERATING_CRC)
+        else if(tFlag == FLAG_RELAY_MESSAGE)
         {
-            bufferClear(tCrcBuffer, 32);
-            rightShift(tPayloadBuffer, *tDlcBuffer, 2);
-            tPayloadBuffer[0] = *tDestination;
-            tPayloadBuffer[1] = *tSource;
-            generateCrc(tCrcBuffer, tPayloadBuffer, *tDlcBuffer, _polynomial);
+            bufferClear(tFrame->crc, 32);
+            generateCrc(tFrame->crc, tFrame->payload, tFrame->dlc[0], _polynomial);
        
             tCounter = 0;
             tFlag = FLAG_SENDING_PREAMBLE;
@@ -44,7 +42,7 @@ ISR(TIMER0_COMPA_vect)
         // STEP3. SENDING CRC
         else if(tFlag == FLAG_SENDING_CRC)
         {
-            if(readBit(tCrcBuffer, tCounter)) SEND_DATA_ONE();
+            if(readBit(tFrame->crc, tCounter)) SEND_DATA_ONE();
             else SEND_DATA_ZERO();
             
             if((++tCounter) >= 32)
@@ -57,7 +55,7 @@ ISR(TIMER0_COMPA_vect)
         // STEP4. SENDING DLC
         else if(tFlag == FLAG_SENDING_DLC)
         {
-            if(readBit(tDlcBuffer, tCounter)) SEND_DATA_ONE();
+            if(readBit(tFrame->dlc, tCounter)) SEND_DATA_ONE();
             else SEND_DATA_ZERO();
 
             if((++tCounter) >= 8)
@@ -70,15 +68,16 @@ ISR(TIMER0_COMPA_vect)
         // STEP5. SENDING PAYLOAD
         else if(tFlag == FLAG_SENDING_PAYLOAD)
         {
-            if(readBit(tPayloadBuffer, tCounter)) SEND_DATA_ONE();
+            if(readBit(tFrame->payload, tCounter)) SEND_DATA_ONE();
             else SEND_DATA_ZERO();
             
             if((++tCounter) >= *tDlcBuffer)
             {
                 tCounter = 0;
-                tFlag = 9999;
+                clearFrame(tFrame);
+                tFlag = FLAG_NOTHING;
             }
-        }*/
+        }
 	}
 }
 
@@ -205,27 +204,38 @@ ISR(PCINT2_vect)
     {
         switch(checkAddress(rFrame))
         {
-            case 0: // Message Turned Back to Transmitter
-                printMsg(msg_turnBack, 27); // Show Error
-                clearFrame(rFrame); // Clear Buffer
+            case 0: // Message Turned Back
+                printMsg(msg_turnBack, 27);
+                uart_changeLine(); uart_changeLine();
+                clearFrame(rFrame);
                 break;
 
             case 1: // Broadcast Message
+                printMsg(msg_broadcast, 17);
+                uart_changeLine(); uart_changeLine();
                 //frame_t* packet = (frame_t*) calloc(1, sizeof(frame_t)); // Layer4
-                *tFrame = *rFrame;// Relay Message
-                // tFalg
+                *tFrame = *rFrame;
+                tFlag = FLAG_RELAY_MESSAGE;
+                clearFrame(rFrame);
                 break;
 
-            case 2: // Correct Message to Me
-                // Layer4
-                // Clear Buffer
+            case 2: // Message to Me
+                printMsg(msg_toHere, 13);
+                uart_changeLine(); uart_changeLine();
+                //frame_t* packet = (frame_t*) calloc(1, sizeof(frame_t)); // Layer4
+                clearFrame(rFrame);
                 break;
 
-            case 3: // Another Nodes' Message
-                // Relay Message
-                // Clear Buffer
+            case 3: // Message To Another Nodes
+                printMsg(msg_toAnother, 18);
+                uart_changeLine(); uart_changeLine();
+                *tFrame = *rFrame;
+                tFlag = FLAG_RELAY_MESSAGE;
+                clearFrame(rFrame);
                 break;
         }
+
+        rFlag = FLAG_DETECTING_PREAMBLE;
     }
 }
 

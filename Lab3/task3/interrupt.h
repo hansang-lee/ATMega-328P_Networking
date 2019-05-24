@@ -16,13 +16,15 @@
 #define INTERRUPT_PERIOD            10
 
 /* Flags at Transmitter Part */
-#define FLAG_GENERATING_CRC         100
-#define FLAG_SENDING_PREAMBLE       101
-#define FLAG_SENDING_DESTINATION    102
-#define FLAG_SENDING_SOURCE         103
-#define FLAG_SENDING_CRC            104
-#define FLAG_SENDING_DLC            105
-#define FLAG_SENDING_PAYLOAD        106
+#define FLAG_NOTHING                100
+#define FLAG_RELAY_MESSAGE          101
+#define FLAG_SENDING_PREAMBLE       102
+#define FLAG_SENDING_DESTINATION    103
+#define FLAG_SENDING_SOURCE         104
+#define FLAG_SENDING_CRC            105
+#define FLAG_SENDING_DLC            106
+#define FLAG_SENDING_PAYLOAD        107
+#define FLAG_TMP                    108
 
 /* Flags of Receiver Part */
 #define FLAG_DETECTING_PREAMBLE     200
@@ -51,11 +53,11 @@ volatile uint32_t timerA    = (INTERRUPT_PERIOD/2);
 volatile uint32_t timerB    = 0;
 
 /* Flags */
-//volatile uint32_t tFlag     = FLAG_GENERATING_CRC;
+volatile uint32_t tFlag     = FLAG_TMP;//FLAG_NOTHING;
 volatile uint32_t rFlag     = FLAG_DETECTING_PREAMBLE;
 
 /* Counters */
-//volatile uint32_t tCounter  = 0;
+volatile uint32_t tCounter  = 0;
 volatile uint32_t rCounter  = 0;
 
 /* RECEIVER */

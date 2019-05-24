@@ -13,10 +13,10 @@ const uint8_t msg_toAnother[18] = "Message To Another";
 /* *****************************************************
  * Return Value
  *
- *  0 : The Message Has Turned Back to the Transmitter
- *  1 : Received BroadCast ID
- *  2 : Received the correct Message to the current Node
- *  3 : Another Nodes' ID
+ *  0 : Message Turned Back
+ *  1 : Boardcast Message
+ *  2 : Message To Me
+ *  3 : Message To Another Nodes
  *
  * *****************************************************/
 uint8_t checkAddress(const frame_t* frame);
