@@ -1,7 +1,7 @@
 #pragma once
 #include <avr/interrupt.h>
-#include "calc.h"
-#include "uart.h"
+#include "calc.c"
+#include "uart.c"
 
 uint8_t tCrcBuffer[4]       = { 0 };
 uint8_t tDlcBuffer[1]       = { 0x30 };

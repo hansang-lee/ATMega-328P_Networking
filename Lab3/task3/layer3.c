@@ -1,33 +1,38 @@
 #pragma once
-#include "uart.h"
+#include <stdlib.h>
+#include "layer3.h"
+#include "calc.c"
 
-#define BROADCAST_ID    0x00
-#define MY_ID           0x0f
-#define PRE_NODE_ID     0x09
-#define NEXT_NODE_ID    0x09
-
-void layer3(frame_t* frame)
+uint8_t checkAddress(const frame_t* frame)
 {
-    /* CASE 1. Broadcast ID 
-     *  1. Receive the packet
-     *  2. Relay the packet to the next node */
-    if(frame->payload[0] == BROADCAST_ID)
+    // CASE 0. Turn the message back
+    if(frame->payload[1] == MY_ID)
     {
-        uart_transmit('A');
+        return 0;
     }
 
-    /* CASE 2. My ID
-     * 1. Receive the packet
-     * 2. Send the ACK back to the source address */
+    // CASE 1. Broadcast ID 
+    else if(frame->payload[0] == BROADCAST_ID)
+    {
+        return 1;
+    }
+
+    // CASE 2. My ID
     else if(frame->payload[0] == MY_ID)
     {
-        uart_transmit('B');
+        return 2;
     }
 
-    /* CASE 3. Another IDs
-     * 1. Relay the packet to the next node */
+    // CASE 3. Another IDs
     else
     {
-        uart_transmit('C');
+        return 3;
     }
+}
+
+void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src)
+{
+    rightShift(frame->payload, size, 2);
+    frame->payload[0] = dst;
+    frame->payload[1] = src;
 }

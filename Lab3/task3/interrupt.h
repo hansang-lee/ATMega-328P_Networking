@@ -32,7 +32,7 @@
 #define FLAG_RECEIVING_DLC          204
 #define FLAG_RECEIVING_PAYLOAD      205
 #define FLAG_CHECKING_CRC           206
-#define FLAG_PROCESSING_DATA        207
+#define FLAG_LAYER_3                207
 
 /* Packet Format */
 typedef struct

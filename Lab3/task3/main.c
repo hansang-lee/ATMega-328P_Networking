@@ -4,6 +4,7 @@
 int main()
 {
     rFrame = &_rFrame;
+    tFrame = &_tFrame;
 
 	io_init();
 	cli();

@@ -1,10 +1,10 @@
 #pragma once
 #include <avr/interrupt.h>
 #include "interrupt.h"
-#include "calc.h"
-#include "uart.h"
-#include "dummy_transmit.c"
+#include "calc.c"
+#include "uart.c"
 #include "layer3.c"
+#include "dummy_transmit.c"
 
 /* Interrupt A - Transmitter */
 ISR(TIMER0_COMPA_vect)
@@ -189,13 +189,16 @@ ISR(PCINT2_vect)
         }
         
         rCounter = 0;
-        rFlag = FLAG_PROCESSING_DATA;
+        rFlag = FLAG_LAYER_3;
     }
     
-    /* STEP6. LAYER3 */
-    else if(rFlag == FLAG_PROCESSING_DATA)
+    /* STEP6. LAYER3 - Check Destination and Source */
+    else if(rFlag == FLAG_LAYER_3)
     {
-        layer3(rFrame);
+        if(checkAddress(rFrame) == 0)
+            uart_transmit('M');
+        uart_changeLine();
+        rFlag = FLAG_DETECTING_PREAMBLE;
     }
 }
 
