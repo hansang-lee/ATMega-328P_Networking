@@ -7,38 +7,31 @@ uint8_t checkAddress(const frame_t* frame)
 {
     uint8_t result = 4;
 
-    switch(frame->payload[1])
+    if(frame->payload[1] == MY_ID)
     {
         /* Transmitter of Message is ME */
-        case MY_ID:
-            result = 0;
-            break;
-        
-        /* Transmitter of Message is Pre-Node */
-        case PRE_NODE_ID:
+        result = 0;
+    }
+
+    else
+    {
+        // Broadcast Message
+        if(frame->payload[0] == BROADCAST_ID)
+        {
+            result = 1;
+        }
+
+        // Message To Me
+        else if(frame->payload[0] == MY_ID)
+        {
+            result = 2;
+        }
  
-            // Broadcast Message
-            if(frame->payload[0] == BROADCAST_ID)
-            {
-                result = 1;
-            }
- 
-            // Message To Me
-            else if(frame->payload[0] == MY_ID)
-            {
-                result = 2;
-            }
- 
-            // Message To Another Nodes
-            else
-            {
-                result = 3;
-            }
-            break;
-        
-        /* Transmitter of Message is Next-Node */
-        //case NEXT_NODE_ID:
-        //    break;
+        // Message To Another Nodes
+        else
+        {
+            result = 3;
+        } 
     }
 
     return result;

@@ -6,8 +6,8 @@
 uint8_t tCrcBuffer[4]       = { 0 };
 uint8_t tDlcBuffer[1]       = { 0x20 };
 uint8_t tPayloadBuffer[251] = { 0x74, 0x65, 0x73, 0x74 };
-uint8_t tDestination[1]     = { 0x10 };
-uint8_t tSource[1]          = { 0x09 };
+uint8_t tDestination[1]     = { 0x00 };
+uint8_t tSource[1]          = { 0x03 };
 uint32_t Flag = FLAG_RELAY_MESSAGE;
 uint8_t Counter = 0;
 

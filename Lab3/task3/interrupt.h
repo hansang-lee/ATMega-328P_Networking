@@ -15,26 +15,37 @@
 /* How often run Interrups? : 1000 = 1s */
 #define INTERRUPT_PERIOD            10
 
+/* Priority */
+#define PRIORITY_SEND_MESSAGE       50
+#define PRIORITY_RELAY_MESSAGE      51
+#define PRIORITY_IDLE               52
+
 /* Flags at Transmitter Part */
-#define FLAG_NOTHING                100
-#define FLAG_RELAY_MESSAGE          101
-#define FLAG_SENDING_PREAMBLE       102
-#define FLAG_SENDING_DESTINATION    103
-#define FLAG_SENDING_SOURCE         104
-#define FLAG_SENDING_CRC            105
-#define FLAG_SENDING_DLC            106
-#define FLAG_SENDING_PAYLOAD        107
-#define FLAG_TMP                    108
+#define FLAG_IDLE                   100
+#define FLAG_WAITING                101
+#define FLAG_GENERATING_CRC         102
+#define FLAG_SENDING_PREAMBLE       103
+#define FLAG_SENDING_DESTINATION    104
+#define FLAG_SENDING_SOURCE         105
+#define FLAG_SENDING_CRC            106
+#define FLAG_SENDING_DLC            107
+#define FLAG_SENDING_PAYLOAD        108
 
 /* Flags of Receiver Part */
-#define FLAG_DETECTING_PREAMBLE     200
-#define FLAG_RECEIVING_DESTINATION  201
-#define FLAG_RECEIVING_SOURCE       202
-#define FLAG_RECEIVING_CRC          203
-#define FLAG_RECEIVING_DLC          204
-#define FLAG_RECEIVING_PAYLOAD      205
-#define FLAG_CHECKING_CRC           206
-#define FLAG_LAYER_3                207
+#define FLAG_DETECTING_PREAMBLE     150
+#define FLAG_RECEIVING_DESTINATION  151
+#define FLAG_RECEIVING_SOURCE       152
+#define FLAG_RECEIVING_CRC          153
+#define FLAG_RECEIVING_DLC          154
+#define FLAG_RECEIVING_PAYLOAD      155
+#define FLAG_CHECKING_CRC           156
+#define FLAG_LAYER_3                157
+
+/* Layer 3 */
+#define RETURNED_MESSGE             200
+#define BROADCAST_MESSAGE           201
+#define MESSAGE_TO_ME               202
+#define MESSAGE_TO_ANOTHER          203
 
 /* Packet Format */
 typedef struct
@@ -53,7 +64,8 @@ volatile uint32_t timerA    = (INTERRUPT_PERIOD/2);
 volatile uint32_t timerB    = 0;
 
 /* Flags */
-volatile uint32_t tFlag     = FLAG_TMP;//FLAG_NOTHING;
+volatile uint32_t pFlag     = FLAG_IDLE;
+volatile uint32_t tFlag     = FLAG_IDLE;
 volatile uint32_t rFlag     = FLAG_DETECTING_PREAMBLE;
 
 /* Counters */
@@ -66,6 +78,8 @@ uint8_t rQueue[1]           = { 0 };
 /* Receiver's- and Transmitter's- Packet */
 frame_t* rFrame; frame_t _rFrame;
 frame_t* tFrame; frame_t _tFrame;
+frame_t* myFrame; frame_t _myFrame;
+frame_t* sFrame; frame_t _sFrame;
 
 /* Messages to print on Minicom */
 const uint8_t logMsg_preamble[18]  = "Preamble Detected";
