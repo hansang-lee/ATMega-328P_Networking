@@ -53,7 +53,7 @@ ISR(TIMER0_COMPA_vect)
                         tCounter = 0;
                         clearFrame(tFrame);
                         tFlag = FLAG_IDLE;
-                        pFlag = PRIORITY_READ;
+                        //pFlag = PRIORITY_READ;
                     }
                     break;
 
@@ -171,6 +171,7 @@ ISR(PCINT2_vect)
                         *sFrame = *rFrame;
 
                         /* Message Relay */
+                        pFlag = PRIORITY_LOCK;
                         *tFrame = *rFrame;
                         clearFrame(rFrame);
                         pFlag = PRIORITY_RELAY;
@@ -190,6 +191,7 @@ ISR(PCINT2_vect)
                         uart_changeLine(); uart_changeLine();
 
                         /* Message Relay */
+                        pFlag = PRIORITY_LOCK;
                         *tFrame = *rFrame;
                         clearFrame(rFrame);
                         pFlag = PRIORITY_RELAY;

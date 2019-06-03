@@ -16,21 +16,22 @@
 #define INTERRUPT_PERIOD            10
 
 /* Priority */
-#define PRIORTY_IDLE                50
+#define PRIORITY_IDLE               50
 #define PRIORITY_RELAY              51
 #define PRIORITY_SEND               52
-#define PRIORITY_WRITE              53
-#define PRIORITY_READ               54
+//#define PRIORITY_WRITE              53
+//#define PRIORITY_READ               54
+#define PRIORITY_LOCK               55
 
 /* Flags at Transmitter Part */
 #define FLAG_IDLE                   100
 #define FLAG_WAITING                101
-#define FLAG_SENDING_PREAMBLE       103
-#define FLAG_SENDING_DESTINATION    104
-#define FLAG_SENDING_SOURCE         105
-#define FLAG_SENDING_CRC            106
-#define FLAG_SENDING_DLC            107
-#define FLAG_SENDING_PAYLOAD        108
+#define FLAG_SENDING_PREAMBLE       102
+#define FLAG_SENDING_DESTINATION    103
+#define FLAG_SENDING_SOURCE         104
+#define FLAG_SENDING_CRC            105
+#define FLAG_SENDING_DLC            106
+#define FLAG_SENDING_PAYLOAD        107
 
 /* Flags of Receiver Part */
 #define FLAG_DETECTING_PREAMBLE     150
