@@ -198,3 +198,10 @@ void bufferClear(uint8_t* bitstring, uint32_t bit_size)
         bitstring[i] = 0x00;
     }
 }
+
+void fillBuffer(frame_t* dst, frame_t* src, const uint8_t* polynomial)
+{
+    bufferClear(dst->crc, 32);
+    *dst = *src;
+    generateCrc(dst->crc, dst->payload, dst->dlc[0], polynomial);
+}

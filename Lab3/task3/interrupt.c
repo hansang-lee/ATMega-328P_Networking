@@ -5,7 +5,6 @@
 #include "calc.c"
 #include "uart.c"
 #include "layer3.c"
-//#include "dummy_transmit.c"
 
 /* Interrupt A - Transmitter */
 ISR(TIMER0_COMPA_vect)
@@ -17,15 +16,11 @@ ISR(TIMER0_COMPA_vect)
             switch(tFlag)
             {
                 // GENERATING CRC
-                case FLAG_GENERATING_CRC:
-                    bufferClear(tFrame->crc, 32);
-                    generateCrc(tFrame->crc, tFrame->payload, tFrame->dlc[0], _polynomial);
-                    tCounter = 0; 
-                    tFlag = FLAG_SENDING_PREAMBLE;
-                    break;
-
-                // GENERATING CRC
-                //case FLAG_RELAY_MESSAGE:
+                //case FLAG_GENERATING_CRC:
+                //    bufferClear(tFrame->crc, 32);
+                //    generateCrc(tFrame->crc, tFrame->payload, tFrame->dlc[0], _polynomial);
+                //    tCounter = 0; 
+                //    tFlag = FLAG_SENDING_PREAMBLE;
                 //    break;
 
                 // SENDING PREAMBLE
@@ -73,7 +68,7 @@ ISR(TIMER0_COMPA_vect)
 /* Pin-Change-Interrupt - Receiver */
 ISR(PCINT2_vect)
 {
-    if(pFlag == PRIORITY_READ)
+    //if(pFlag == PRIORITY_READ)
     {
         switch(rFlag)
         {

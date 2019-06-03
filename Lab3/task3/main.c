@@ -8,31 +8,31 @@
 
 int main()
 {
-    // FRAME
+    /* Frame Packets Initializing */
     rFrame = &_rFrame;
     tFrame = &_tFrame;
     myFrame = &_myFrame;
     sFrame = &_sFrame;
 
-    // FLAGS
+    /* Flags Initializing */
     tFlag = FLAG_IDLE;
     rFlag = FLAG_DETECTING_PREAMBLE;
     pFlag = PRIORITY_READ;
 
-    // Filled Buffer
-    tFrame->crc[0] = 0x00;
-    tFrame->crc[1] = 0x00;
-    tFrame->crc[2] = 0x00;
-    tFrame->crc[3] = 0x00;
-    tFrame->dlc[0] = 0x30; // 0011 0000
-    tFrame->payload[0] = 0x09; // Dst : 0000 0000
-    tFrame->payload[1] = 0x0f; // Src : 0000 1111
-    tFrame->payload[2] = 0x74; // 0111 0100
-    tFrame->payload[3] = 0x65; // 0110 0101
-    tFrame->payload[4] = 0x73; // 0111 0011
-    tFrame->payload[5] = 0x74; // 0111 0100
+    /* Already Filled Buffer */
+    myFrame->crc[0] = 0x00;
+    myFrame->crc[1] = 0x00;
+    myFrame->crc[2] = 0x00;
+    myFrame->crc[3] = 0x00;
+    myFrame->dlc[0] = 0x30;     // 0011 0000
+    myFrame->payload[0] = 0x00; // Dst : 0000 0000
+    myFrame->payload[1] = 0x0f; // Src : 0000 1111
+    myFrame->payload[2] = 0x74; // 0111 0100
+    myFrame->payload[3] = 0x65; // 0110 0101
+    myFrame->payload[4] = 0x73; // 0111 0011
+    myFrame->payload[5] = 0x74; // 0111 0100
 
-    // INTERRUPT
+    /* Interrupts Initializing */
 	io_init();
 	cli();
 	uart_init(MYUBRR);
@@ -40,27 +40,16 @@ int main()
 	pin_change_setup();
 	sei();
 
-    // INPUT
+    /* User Input */
+    uint8_t typed = '\0';
 	for (;;)
 	{
-        switch(uart_receive())
+        typed = uart_receive();
+        switch(typed)
         {
-            case WRITE:
-                pFlag = PRIORITY_WRITE;
-                while(1)
-                {
-                    if(uart_receive() == ENTER)
-                    {
-                        tFlag = FLAG_GENERATING_CRC;
-                        pFlag = PRIORITY_READ;
-                        break;
-                    }
-                    if(uart_receive() == QUIT)
-                    {
-                        pFlag = PRIORITY_READ;
-                        break;
-                    }
-                }
+            case ENTER:
+                fillBuffer(tFrame, myFrame, _polynomial);
+                tFlag = FLAG_SENDING_PREAMBLE;
                 _delay_ms(INTERRUPT_PERIOD);
                 break;
 

@@ -25,7 +25,6 @@
 /* Flags at Transmitter Part */
 #define FLAG_IDLE                   100
 #define FLAG_WAITING                101
-#define FLAG_GENERATING_CRC         102
 #define FLAG_SENDING_PREAMBLE       103
 #define FLAG_SENDING_DESTINATION    104
 #define FLAG_SENDING_SOURCE         105
@@ -42,12 +41,6 @@
 #define FLAG_RECEIVING_PAYLOAD      155
 #define FLAG_CHECKING_CRC           156
 #define FLAG_LAYER_3                157
-
-/* Layer 3 */
-//#define RETURNED_MESSAGE            200
-//#define BROADCAST_MESSAGE           201
-//#define MESSAGE_TO_ME               202
-//#define MESSAGE_TO_ANOTHER          203
 
 /* Packet Format */
 typedef struct
