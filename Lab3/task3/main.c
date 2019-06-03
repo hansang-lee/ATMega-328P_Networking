@@ -1,7 +1,10 @@
 #include "io.c"
 #include "interrupt.c"
 
-#define ENTER 0x0d
+#define ENTER   0x0d
+#define WRITE   'w'
+#define READ    'r'
+#define QUIT    'q'
 
 int main()
 {
@@ -11,19 +14,18 @@ int main()
     myFrame = &_myFrame;
     sFrame = &_sFrame;
 
+    // FLAGS
     tFlag = FLAG_IDLE;
     rFlag = FLAG_DETECTING_PREAMBLE;
-    pFlag = PRIORITY_IDLE;
+    pFlag = PRIORITY_READ;
 
     // Filled Buffer
     tFrame->crc[0] = 0x00;
     tFrame->crc[1] = 0x00;
     tFrame->crc[2] = 0x00;
     tFrame->crc[3] = 0x00;
-
     tFrame->dlc[0] = 0x30; // 0011 0000
-
-    tFrame->payload[0] = 0x09; // Dst : 0000 1001
+    tFrame->payload[0] = 0x09; // Dst : 0000 0000
     tFrame->payload[1] = 0x0f; // Src : 0000 1111
     tFrame->payload[2] = 0x74; // 0111 0100
     tFrame->payload[3] = 0x65; // 0110 0101
@@ -41,10 +43,29 @@ int main()
     // INPUT
 	for (;;)
 	{
-        if(uart_receive() == ENTER)
+        switch(uart_receive())
         {
-            tFlag = FLAG_GENERATING_CRC;
+            case WRITE:
+                pFlag = PRIORITY_WRITE;
+                while(1)
+                {
+                    if(uart_receive() == ENTER)
+                    {
+                        tFlag = FLAG_GENERATING_CRC;
+                        pFlag = PRIORITY_READ;
+                        break;
+                    }
+                    if(uart_receive() == QUIT)
+                    {
+                        pFlag = PRIORITY_READ;
+                        break;
+                    }
+                }
+                _delay_ms(INTERRUPT_PERIOD);
+                break;
+
+            default:
+                break;
         }
-        _delay_ms(INTERRUPT_PERIOD);
 	}
 }

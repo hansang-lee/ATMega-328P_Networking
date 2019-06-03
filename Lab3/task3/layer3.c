@@ -5,12 +5,14 @@
 
 uint8_t checkAddress(const frame_t* frame)
 {
-    uint8_t result = 4;
+    uint8_t result = 250;
 
     if(frame->payload[1] == MY_ID)
     {
-        /* Transmitter of Message is ME */
-        result = 0;
+        if(frame->payload[0] == BROADCAST_ID)
+            result = MESSAGE_BROADCAST_FROM_ME;
+        else
+            result = MESSAGE_TURNED_BACK;
     }
 
     else
@@ -18,19 +20,19 @@ uint8_t checkAddress(const frame_t* frame)
         // Broadcast Message
         if(frame->payload[0] == BROADCAST_ID)
         {
-            result = 1;
+            result = MESSAGE_BROADCAST;
         }
 
         // Message To Me
         else if(frame->payload[0] == MY_ID)
         {
-            result = 2;
+            result = MESSAGE_TO_ME;
         }
  
         // Message To Another Nodes
         else
         {
-            result = 3;
+            result = MESSAGE_TO_ANOTHER;
         } 
     }
 

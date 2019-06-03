@@ -16,9 +16,11 @@
 #define INTERRUPT_PERIOD            10
 
 /* Priority */
-#define PRIORITY_SEND_MESSAGE       50
-#define PRIORITY_RELAY_MESSAGE      51
-#define PRIORITY_IDLE               52
+#define PRIORTY_IDLE                50
+#define PRIORITY_RELAY              51
+#define PRIORITY_SEND               52
+#define PRIORITY_WRITE              53
+#define PRIORITY_READ               54
 
 /* Flags at Transmitter Part */
 #define FLAG_IDLE                   100
@@ -42,10 +44,10 @@
 #define FLAG_LAYER_3                157
 
 /* Layer 3 */
-#define RETURNED_MESSGE             200
-#define BROADCAST_MESSAGE           201
-#define MESSAGE_TO_ME               202
-#define MESSAGE_TO_ANOTHER          203
+//#define RETURNED_MESSAGE            200
+//#define BROADCAST_MESSAGE           201
+//#define MESSAGE_TO_ME               202
+//#define MESSAGE_TO_ANOTHER          203
 
 /* Packet Format */
 typedef struct
@@ -76,10 +78,10 @@ volatile uint32_t rCounter  = 0;
 uint8_t rQueue[1]           = { 0 };
 
 /* Receiver's- and Transmitter's- Packet */
-frame_t* rFrame; frame_t _rFrame;
-frame_t* tFrame; frame_t _tFrame;
-frame_t* myFrame; frame_t _myFrame;
-frame_t* sFrame; frame_t _sFrame;
+frame_t* rFrame; frame_t _rFrame;       // Receive Frame
+frame_t* tFrame; frame_t _tFrame;       // Transmit Frame
+frame_t* myFrame; frame_t _myFrame;     // User-Input Frame
+frame_t* sFrame; frame_t _sFrame;       // Buffer Frame
 
 /* Messages to print on Minicom */
 const uint8_t logMsg_preamble[18]  = "Preamble Detected";

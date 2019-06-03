@@ -5,6 +5,12 @@
 #define PRE_NODE_ID     0x09
 #define NEXT_NODE_ID    0x09
 
+#define MESSAGE_TURNED_BACK         0
+#define MESSAGE_BROADCAST_FROM_ME   1
+#define MESSAGE_BROADCAST           2
+#define MESSAGE_TO_ME               3
+#define MESSAGE_TO_ANOTHER          4
+
 const uint8_t msg_turnBack[27]  = "The Message Has Turned Back";
 const uint8_t msg_broadcast[17] = "BroadCast Message";
 const uint8_t msg_toHere[13]    = "Message To Me";
