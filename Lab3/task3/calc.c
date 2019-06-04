@@ -203,5 +203,6 @@ void fillBuffer(frame_t* dst, frame_t* src, const uint8_t* polynomial)
 {
     bufferClear(dst->crc, 32);
     *dst = *src;
+    dst->dlc[0] += 0x02;
     generateCrc(dst->crc, dst->payload, dst->dlc[0], polynomial);
 }

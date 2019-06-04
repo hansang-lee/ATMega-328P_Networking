@@ -11,18 +11,10 @@ ISR(TIMER0_COMPA_vect)
 {
 	if ((timerA++) > INTERRUPT_PERIOD)
 	{
-        if((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+        if(((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)))
         {
             switch(tFlag)
             {
-                // GENERATING CRC
-                //case FLAG_GENERATING_CRC:
-                //    bufferClear(tFrame->crc, 32);
-                //    generateCrc(tFrame->crc, tFrame->payload, tFrame->dlc[0], _polynomial);
-                //    tCounter = 0; 
-                //    tFlag = FLAG_SENDING_PREAMBLE;
-                //    break;
-
                 // SENDING PREAMBLE
                 case FLAG_SENDING_PREAMBLE:
                     if(readBit(_preamble, tCounter)) SEND_DATA_ONE();
@@ -53,7 +45,7 @@ ISR(TIMER0_COMPA_vect)
                         tCounter = 0;
                         clearFrame(tFrame);
                         tFlag = FLAG_IDLE;
-                        //pFlag = PRIORITY_READ;
+                        pFlag = PRIORITY_IDLE;
                     }
                     break;
 
@@ -77,6 +69,7 @@ ISR(PCINT2_vect)
                 updateBit(rQueue, (rCounter%8), receiveData());
                 if(checkPreamble(*rQueue, *_preamble))
                 {
+                    uart_changeLine(); uart_changeLine();
                     printBit(rQueue, 0, 8);
                     uart_transmit('\r'); uart_changeLine(); uart_transmit(' ');
                     printMsg(logMsg_preamble, 17); uart_changeLine(); uart_changeLine();
@@ -151,8 +144,8 @@ ISR(PCINT2_vect)
                 rCounter = 0;
                 rFlag = FLAG_LAYER_3;
                 break;
-    
-            // Check Destination and Source
+
+            // CHECKING ADDRESS
             case FLAG_LAYER_3:
                 switch(checkAddress(rFrame))
                 {
