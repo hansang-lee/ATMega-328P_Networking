@@ -11,6 +11,32 @@ void printMsg(const char* msg, const uint8_t length)
     }
 }
 
+void printFrame(frame_t* frame)
+{
+    printMsg("RECEIVE", 7); 
+    uart_changeLine();
+
+    printMsg("CRC ", 4);
+    printBit(frame->crc, 0, 32); 
+    uart_changeLine();
+
+    printMsg("DLC ", 4);
+    printBit(frame->dlc, 0, 8); 
+    uart_changeLine();
+
+    printMsg("DST ", 4);
+    printBit(frame->payload, 0, 8);
+    uart_changeLine();
+
+    printMsg("SRC", 3);
+    printBit(frame->payload, 8, 16);
+    uart_changeLine();
+
+    printMsg("PAY", 3);
+    printBit(frame->payload, 16, ((frame->dlc[0])*8));
+    uart_changeLine();
+}
+
 /* Read a specific bit from a bitstring */
 uint8_t readBit(const uint8_t* bitstring, const uint32_t pos)
 {

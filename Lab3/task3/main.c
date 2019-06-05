@@ -47,39 +47,36 @@ int main()
         switch(typed)
         {
             case TO_NEXT:
-                if(!((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)))
-                {
-                    myFrame->payload[0] = 0x09;
-                    clearBuffer(myFrame->crc, 32);
-                    generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
-                    *tFrame = *myFrame;
-                    tFlag = FLAG_SENDING_PREAMBLE;
-                    pFlag = PRIORITY_SEND;
-                }
+                myFrame->payload[0] = 0x09;
+                clearBuffer(myFrame->crc, 32);
+                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
+                
+                while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                *tFrame = *myFrame;
+                tFlag = FLAG_SENDING_PREAMBLE;
+                pFlag = PRIORITY_SEND;
                 break;
 
             case TO_ANOTHER:
-                if(!((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)))
-                {
-                    myFrame->payload[0] = 0x01;
-                    clearBuffer(myFrame->crc, 32);
-                    generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
-                    *tFrame = *myFrame;
-                    tFlag = FLAG_SENDING_PREAMBLE;
-                    pFlag = PRIORITY_SEND;
-                }
+                myFrame->payload[0] = 0x01;
+                clearBuffer(myFrame->crc, 32);
+                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
+                
+                while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                *tFrame = *myFrame;
+                tFlag = FLAG_SENDING_PREAMBLE;
+                pFlag = PRIORITY_SEND;
                 break;
 
             case TO_EVERYNODE:
-                if(!((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)))
-                {
-                    myFrame->payload[0] = 0x00;
-                    clearBuffer(myFrame->crc, 32);
-                    generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
-                    *tFrame = *myFrame;
-                    tFlag = FLAG_SENDING_PREAMBLE;
-                    pFlag = PRIORITY_SEND;
-                }
+                myFrame->payload[0] = 0x00;
+                clearBuffer(myFrame->crc, 32);
+                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
+                
+                while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                *tFrame = *myFrame;
+                tFlag = FLAG_SENDING_PREAMBLE;
+                pFlag = PRIORITY_SEND;
                 break;
 
             default:
