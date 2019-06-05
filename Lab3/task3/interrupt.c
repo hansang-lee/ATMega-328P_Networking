@@ -17,36 +17,61 @@ ISR(TIMER0_COMPA_vect)
             {
                 // SENDING PREAMBLE
                 case FLAG_SENDING_PREAMBLE:
-                    if((tCounter%8) == 0) uart_transmit(' ');
+                    
+                    if((pFlag == PRIORITY_SEND) && (tCounter == 0)) 
+                    { printMsg("TRANSMIT", 8); uart_changeLine(); printMsg("PRE ", 4); }
+ 
+                    else if((pFlag == PRIORITY_RELAY) && (tCounter == 0)) 
+                    { printMsg("RELAY ", 5); uart_changeLine(); printMsg("PRE ", 4); }
+
                     if(readBit(_preamble, tCounter)) { SEND_DATA_ONE(); uart_transmit('1'); }
                     else { SEND_DATA_ZERO(); uart_transmit('0'); }
+
                     if((++tCounter) >= 8)
                     { uart_changeLine(); tCounter = 0; tFlag = FLAG_SENDING_CRC; }
+
                     break;
 
                 // SENDING CRC
                 case FLAG_SENDING_CRC:
-                    if((tCounter%8) == 0) uart_transmit(' ');
+                    
+                    if((tCounter > 0) && ((tCounter % 8) == 0)) uart_transmit(' ');
+                    if(tCounter == 0) { printMsg("CRC ", 4); }
+                    
                     if(readBit(tFrame->crc, tCounter)) { SEND_DATA_ONE(); uart_transmit('1'); }
                     else { SEND_DATA_ZERO(); uart_transmit('0'); }
+                    
                     if((++tCounter) >= 32)
                     { uart_changeLine(); tCounter = 0; tFlag = FLAG_SENDING_DLC; }
+                    
                     break;
 
                 // SENDING DLC
                 case FLAG_SENDING_DLC:
-                    if((tCounter%8) == 0) uart_transmit(' ');
+                    
+                    if(tCounter == 0) { printMsg("DLC ", 4); }
+                    
                     if(readBit(tFrame->dlc, tCounter)) { SEND_DATA_ONE(); uart_transmit('1'); }
                     else { SEND_DATA_ZERO(); uart_transmit('0'); }
+                    
                     if((++tCounter) >= 8)
                     { uart_changeLine(); tCounter = 0; tFlag = FLAG_SENDING_PAYLOAD; }
+                    
                     break;
 
                 // SENDING PAYLOAD
                 case FLAG_SENDING_PAYLOAD:
-                    if((tCounter%8) == 0) uart_transmit(' ');
+                    
+                    if((tCounter > 0) && ((tCounter == 8) || (tCounter == 16))) uart_changeLine();
+                    if((tCounter > 0) && ((tCounter % 8) == 0)) uart_transmit(' ');
+                    
+                    if(tCounter == 0) { printMsg("DST ", 4); }
+                    else if(tCounter == 8) { uart_transmit('\r'); printMsg("SRC ", 4); }
+                    else if(tCounter == 16) { uart_transmit('\r'); printMsg("PAY ", 4); }
+                    
                     if(readBit(tFrame->payload, tCounter)) { SEND_DATA_ONE(); uart_transmit('1'); }
                     else { SEND_DATA_ZERO(); uart_transmit('0'); }
+                    
                     if((++tCounter) >= ((tFrame->dlc[0])*8))
                     {
                         uart_changeLine(); uart_changeLine();
@@ -55,6 +80,7 @@ ISR(TIMER0_COMPA_vect)
                         tFlag = FLAG_IDLE;
                         pFlag = PRIORITY_IDLE;
                     }
+                    
                     break;
 
                 default:
@@ -77,19 +103,10 @@ ISR(PCINT2_vect)
                 updateBit(rQueue, (rCounter%8), receiveData());
                 if(checkPreamble(*rQueue, *_preamble))
                 {
-                    uart_transmit('\r');
-                    uart_transmit('R');
-                    uart_transmit('E');
-                    uart_transmit('C');
-                    uart_transmit('E');
-                    uart_transmit('I');
-                    uart_transmit('V');
-                    uart_transmit('E');
-                    uart_changeLine();
-
+                    printMsg("RECEIVE", 7); uart_changeLine();
+                    printMsg("PRE ", 4);
                     printBit(rQueue, 0, 8);
                     uart_changeLine();
-                    
                     *rQueue = 0;
                     rCounter = 0;
                     rFlag = FLAG_RECEIVING_CRC;
@@ -98,16 +115,12 @@ ISR(PCINT2_vect)
 
             // RECEIVING CRC
             case FLAG_RECEIVING_CRC:
-                //if(receiveData()) uart_transmit('1');
-                //else uart_transmit('0');
-                //break;
-                
                 updateBit(rFrame->crc, rCounter, receiveData());
                 if((++rCounter) >= 32)
                 {
+                    printMsg("CRC ", 4);
                     printBit(rFrame->crc, 0, 32);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_crc, 12); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
                     rCounter = 0;
                     rFlag = FLAG_RECEIVING_DLC;
                 }
@@ -118,9 +131,9 @@ ISR(PCINT2_vect)
                 updateBit(rFrame->dlc, rCounter, receiveData());
                 if((++rCounter) >= 8)
                 {
+                    printMsg("DLC ", 4);
                     printBit(rFrame->dlc, 0, 8);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_dlc, 12); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
                     rCounter = 0;
                     rFlag = FLAG_RECEIVING_PAYLOAD;
                 }
@@ -129,19 +142,19 @@ ISR(PCINT2_vect)
             // RECEIVING PAYLOAD
             case FLAG_RECEIVING_PAYLOAD:
                 updateBit(rFrame->payload, rCounter, receiveData());
-                if((++rCounter) >= rFrame->dlc[0])
+                if((++rCounter) >= ((rFrame->dlc[0])*8))
                 {
+                    printMsg("DST ", 4);
                     printBit(rFrame->payload, 0, 8);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_dst, 20); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
             
+                    printMsg("SRC", 3);
                     printBit(rFrame->payload, 8, 16);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_src, 15); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
 
-                    printBit(rFrame->payload, 16, rFrame->dlc[0]);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_payload, 17); uart_changeLine(); uart_changeLine();
+                    printMsg("PAY", 3);
+                    printBit(rFrame->payload, 16, ((rFrame->dlc[0])*8));
+                    uart_changeLine();
 
                     rCounter = 0;
                     rFlag = FLAG_CHECKING_CRC;
@@ -152,15 +165,15 @@ ISR(PCINT2_vect)
             case FLAG_CHECKING_CRC:
                 if((checkCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
                 {
+                    printMsg("YES ", 4);
                     printBit(rFrame->crc, 0, 32);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_crc_true, 14); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
                 }
                 else
                 {
+                    printMsg("NOO ", 4);
                     printBit(rFrame->crc, 0, 32);
-                    uart_transmit('\r'); uart_changeLine(); //uart_transmit(' ');
-                    //printMsg(logMsg_crc_false, 16); uart_changeLine(); uart_changeLine();
+                    uart_changeLine();
                 }
                 rCounter = 0;
                 rFlag = FLAG_LAYER_3;
@@ -171,7 +184,7 @@ ISR(PCINT2_vect)
                 switch(checkAddress(rFrame))
                 {
                     case MESSAGE_TURNED_BACK: // Message Turned Back
-                        uart_transmit(' ');
+                        uart_changeLine();
                         printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
                         clearFrame(rFrame);
                         break;
@@ -180,7 +193,7 @@ ISR(PCINT2_vect)
                         break;
 
                     case MESSAGE_BROADCAST: // Broadcast Message
-                        uart_transmit(' ');
+                        uart_changeLine();
                         printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
                         *sFrame = *rFrame;
 
@@ -193,7 +206,7 @@ ISR(PCINT2_vect)
                         break;
 
                     case MESSAGE_TO_ME: // Message to Me
-                        uart_transmit(' ');
+                        uart_changeLine();
                         printMsg("MSG TO ME", 9);
                         uart_changeLine(); uart_changeLine();
                         *sFrame = *rFrame;
@@ -201,7 +214,7 @@ ISR(PCINT2_vect)
                         break;
 
                     case MESSAGE_TO_ANOTHER: // Message To Another Nodes
-                        uart_transmit(' ');
+                        uart_changeLine();
                         printMsg("TO ANOTHER", 10);
                         uart_changeLine(); uart_changeLine();
 

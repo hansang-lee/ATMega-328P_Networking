@@ -11,14 +11,6 @@ void printMsg(const char* msg, const uint8_t length)
     }
 }
 
-void pr(const char* msg, const uint8_t length)
-{
-    for(int i=0; i<length; i++)
-    {
-        uart_transmit(msg[i]);
-    }
-}
-
 /* Read a specific bit from a bitstring */
 uint8_t readBit(const uint8_t* bitstring, const uint32_t pos)
 {
@@ -62,7 +54,7 @@ void printBit(const uint8_t* buffer, const uint32_t from, const uint32_t to)
 {
     for(int i=from; i<to; i++)
     {
-        if((i%8)==0) {uart_transmit(' ');}
+        if((i>0) && (i%8)==0) {uart_transmit(' ');}
         if(buffer[(i/8)] & (0b10000000 >> (i%8))) {uart_transmit('1');}
         else {uart_transmit('0');}
     }
@@ -97,16 +89,16 @@ void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
 void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
-    uint32_t payload_size = (src_size + 32);
+    uint32_t payload_size = ((src_size*8) + 32);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
     /* Copies the payload to the temporary variable */
-    for(int i=0; i<(src_size/8); i++) {payload[i] = src[i];}
-    for(int i=(src_size/8); i<(payload_size/8); i++) {payload[i] = 0x00;}
+    for(int i=0; i<src_size; i++) {payload[i] = src[i];}
+    for(int i=src_size; i<(payload_size/8); i++) {payload[i] = 0x00;}
 
     /* CRC Calculation */
     uint32_t iterator = 0;
-    while(iterator < src_size)
+    while(iterator < (src_size*8))
     {
         /* Payload MSB is 0 : Left-Shift */
         if(!(readBit(payload, 0)))
@@ -146,16 +138,16 @@ void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, cons
 int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
-    uint32_t payload_size = (src_size + 32);
+    uint32_t payload_size = ((src_size*8) + 32);
     uint8_t* payload = (uint8_t*) malloc(payload_size);
 
     /* Copies the payload to the temporary variable */
-    for(int i=0; i<(src_size/8); i++) {payload[i] = src[i];}
-    for(int i=(src_size/8); i<(payload_size/8); i++) {payload[i] = crc[i-(src_size/8)];}
+    for(int i=0; i<src_size; i++) {payload[i] = src[i];}
+    for(int i=src_size; i<(payload_size/8); i++) {payload[i] = crc[i-src_size];}
 
     /* CRC Calculation */
     uint32_t iterator = 0;
-    while(iterator < src_size)
+    while(iterator < (src_size*8))
     {
         /* Payload MSB is 0 : Left-Shift */
         if(!(readBit(payload, 0)))
@@ -205,12 +197,4 @@ void clearBuffer(uint8_t* bitstring, uint32_t bit_size)
     {
         bitstring[i] = 0x00;
     }
-}
-
-void fillBuffer(frame_t* dst, frame_t* src, const uint8_t* polynomial)
-{
-    clearBuffer(dst->crc, 32);
-    *dst = *src;
-    dst->dlc[0] += 0x02;
-    generateCrc(dst->crc, dst->payload, dst->dlc[0], polynomial);
 }
