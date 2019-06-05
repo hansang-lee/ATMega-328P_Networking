@@ -13,15 +13,13 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            10
+#define INTERRUPT_PERIOD            20
 
 /* Priority */
 #define PRIORITY_IDLE               50
 #define PRIORITY_RELAY              51
 #define PRIORITY_SEND               52
-//#define PRIORITY_WRITE              53
-//#define PRIORITY_READ               54
-#define PRIORITY_LOCK               55
+#define PRIORITY_LOCK               53
 
 /* Flags at Transmitter Part */
 #define FLAG_IDLE                   100
@@ -76,16 +74,6 @@ frame_t* rFrame; frame_t _rFrame;       // Receive Frame
 frame_t* tFrame; frame_t _tFrame;       // Transmit Frame
 frame_t* myFrame; frame_t _myFrame;     // User-Input Frame
 frame_t* sFrame; frame_t _sFrame;       // Buffer Frame
-
-/* Messages to print on Minicom */
-const uint8_t logMsg_preamble[18]  = "Preamble Detected";
-const uint8_t logMsg_dst[20]       = "Destination Received";
-const uint8_t logMsg_src[15]       = "Source Received";
-const uint8_t logMsg_crc[13]       = "CRC Received";
-const uint8_t logMsg_crc_true[14]  = "CRC is correct";
-const uint8_t logMsg_crc_false[16] = "CRC is incorrect";
-const uint8_t logMsg_dlc[13]       = "DLC Received";
-const uint8_t logMsg_payload[17]   = "Payload Received";
 
 /* Implementations */
 void interrupt_setup()

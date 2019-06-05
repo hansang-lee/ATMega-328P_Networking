@@ -20,10 +20,9 @@ int main()
     pFlag = PRIORITY_IDLE;
 
     /* Already Filled Buffer */
-    myFrame->crc[0]     = 0x00;
-    myFrame->crc[1]     = 0x00;
-    myFrame->crc[2]     = 0x00;
-    myFrame->crc[3]     = 0x00;
+    clearFrame(tFrame);
+    clearFrame(myFrame);
+    clearFrame(rFrame);
     myFrame->dlc[0]     = 0x04; // Payload Size : 0000 0110
     myFrame->payload[0] = 0x09; // Destination  : 0000 1001
     myFrame->payload[1] = 0x0f; // Source       : 0000 1111
@@ -51,8 +50,8 @@ int main()
                 if(!((pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)))
                 {
                     fillBuffer(tFrame, myFrame, _polynomial);
-                    pFlag = PRIORITY_SEND;
                     tFlag = FLAG_SENDING_PREAMBLE;
+                    pFlag = PRIORITY_SEND;
                 }
                 break;
 

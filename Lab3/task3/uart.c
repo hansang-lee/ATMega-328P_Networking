@@ -27,6 +27,6 @@ void uart_init(unsigned long ubrr)
 
 void uart_changeLine()
 {
-    uart_transmit('\r');
     uart_transmit('\n');
+    uart_transmit('\r');
 }

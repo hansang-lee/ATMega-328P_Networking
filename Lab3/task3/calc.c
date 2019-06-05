@@ -3,7 +3,15 @@
 #include "calc.h"
 
 /* Print log-messages */
-void printMsg(const uint8_t* msg, const uint8_t length)
+void printMsg(const char* msg, const uint8_t length)
+{
+    for(int i=0; i<length; i++)
+    {
+        uart_transmit(msg[i]);
+    }
+}
+
+void pr(const char* msg, const uint8_t length)
 {
     for(int i=0; i<length; i++)
     {
@@ -191,7 +199,7 @@ int8_t checkCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
         return 0;
 }
 
-void bufferClear(uint8_t* bitstring, uint32_t bit_size)
+void clearBuffer(uint8_t* bitstring, uint32_t bit_size)
 {
     for(int i=0; i<(bit_size/8); i++)
     {
@@ -201,7 +209,7 @@ void bufferClear(uint8_t* bitstring, uint32_t bit_size)
 
 void fillBuffer(frame_t* dst, frame_t* src, const uint8_t* polynomial)
 {
-    bufferClear(dst->crc, 32);
+    clearBuffer(dst->crc, 32);
     *dst = *src;
     dst->dlc[0] += 0x02;
     generateCrc(dst->crc, dst->payload, dst->dlc[0], polynomial);

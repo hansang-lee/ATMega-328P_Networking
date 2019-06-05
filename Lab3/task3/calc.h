@@ -1,6 +1,6 @@
 #pragma once
 
-void printMsg(const uint8_t* msg, const uint8_t length);
+void printMsg(const char* msg, const uint8_t length);
 uint8_t readBit(const uint8_t* bitstring, const uint32_t pos);
 void writeBit(uint8_t* bitstring, const uint32_t pos, const uint8_t data);
 uint8_t receiveData();
