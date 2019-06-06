@@ -213,7 +213,6 @@ ISR(PCINT2_vect)
                             break;
 
                         case MESSAGE_TO_ANOTHER: // Message To Another Nodes
-                            
                             pFlag = PRIORITY_LOCK;
                             *tFrame = *rFrame;
                             clearFrame(rFrame);

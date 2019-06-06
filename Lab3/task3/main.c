@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "io.c"
 #include "interrupt.c"
 
@@ -11,7 +10,7 @@
 int main()
 {
     /* Frame Packets Initializing */
-    rFrame = (frame_t*) malloc(sizeof(frame_t)*1); //&_rFrame;
+    rFrame = &_rFrame;
     tFrame = &_tFrame;
     myFrame = &_myFrame;
     sFrame = &_sFrame;
@@ -26,7 +25,6 @@ int main()
     clearFrame(myFrame);
     clearFrame(rFrame);
     myFrame->dlc[0]     = 0x06; // Payload Size : 0000 0110
-    //myFrame->payload[0] = 0x09; // Destination  : 0000 1001
     myFrame->payload[1] = 0x0f; // Source       : 0000 1111
     myFrame->payload[2] = 0x74; // 0111 0100
     myFrame->payload[3] = 0x65; // 0110 0101
@@ -44,7 +42,6 @@ int main()
     /* User Input */
 	for (;;)
 	{
-        uart_transmit('h');
         switch(uart_receive())
         {
             case TO_NEXT:
