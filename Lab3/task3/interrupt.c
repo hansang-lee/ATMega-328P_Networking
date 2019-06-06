@@ -101,7 +101,11 @@ ISR(TIMER0_COMPA_vect)
                         SEND_DATA_ONE();
                         if(pFlag == PRIORITY_SEND) uart_transmit('1'); 
                     }
-                    else { SEND_DATA_ZERO(); uart_transmit('0'); }
+                    else 
+                    { 
+                        SEND_DATA_ZERO(); 
+                        if(pFlag == PRIORITY_SEND) uart_transmit('0'); 
+                    }
                     
                     if((++tCounter) >= ((tFrame->dlc[0])*8))
                     {
@@ -171,74 +175,63 @@ ISR(PCINT2_vect)
 
             // CHECKING CRC
             case FLAG_CHECKING_CRC:
-                if((checkCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
+                if((generateCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
                 {
-                    printMsg("CRC OK", 6);
-                    printBit(rFrame->crc, 0, 32);
-                    uart_changeLine();
-                    rFlag = FLAG_LAYER_3;
+                    // CHECKING ADDRESS
+                    switch(checkAddress(rFrame))
+                    {
+                        case MESSAGE_TURNED_BACK: // Message Turned Back
+                            printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
+                            clearFrame(rFrame);
+                            break;
+
+                        case MESSAGE_BROADCAST_FROM_ME: // Broadcast Message From Me
+                            break;
+
+                        case MESSAGE_BROADCAST: // Broadcast Message
+                            printMsg("RECEIVE", 7); uart_changeLine();
+                            printFrame(rFrame); uart_changeLine();
+                            printMsg("CRC OK ", 7); uart_changeLine();
+                            printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
+                            *sFrame = *rFrame;
+                            
+                            pFlag = PRIORITY_LOCK;
+                            *tFrame = *rFrame;
+                            clearFrame(rFrame);
+                            tFlag = FLAG_SENDING_PREAMBLE;
+                            pFlag = PRIORITY_RELAY;
+                            break;
+
+                        case MESSAGE_TO_ME: // Message to Me
+                            printMsg("RECEIVE", 7); uart_changeLine();
+                            printFrame(rFrame); uart_changeLine();
+                            printMsg("CRC OK ", 7); uart_changeLine();
+                            printMsg("MESSAGE TO ME", 13);
+                            uart_changeLine(); uart_changeLine();
+                            *sFrame = *rFrame;
+                            clearFrame(rFrame);
+                            break;
+
+                        case MESSAGE_TO_ANOTHER: // Message To Another Nodes
+                            
+                            pFlag = PRIORITY_LOCK;
+                            *tFrame = *rFrame;
+                            clearFrame(rFrame);
+                            tFlag = FLAG_SENDING_PREAMBLE;
+                            pFlag = PRIORITY_RELAY;
+                            break;
+                    }
+                    rFlag = FLAG_DETECTING_PREAMBLE;
                 }
                 else
                 {
-                    printMsg("CRC NO", 6);
+                    printMsg("CRC NO ", 7);
                     printBit(rFrame->crc, 0, 32);
-                    uart_changeLine();
+                    uart_changeLine(); uart_changeLine();
                     clearFrame(rFrame);
                     rFlag = FLAG_DETECTING_PREAMBLE;
                 }
                 rCounter = 0;
-                break;
-
-            // CHECKING ADDRESS
-            case FLAG_LAYER_3:
-                switch(checkAddress(rFrame))
-                {
-                    case MESSAGE_TURNED_BACK: // Message Turned Back X
-                        uart_changeLine();
-                        printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
-                        clearFrame(rFrame);
-                        break;
-
-                    case MESSAGE_BROADCAST_FROM_ME: // Broadcast Message From Me X
-                        break;
-
-                    case MESSAGE_BROADCAST: // Broadcast Message O
-                        printFrame(rFrame);
-                        uart_changeLine();
-                        printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
-                        *sFrame = *rFrame;
-
-                        /* Message Relay X */
-                        pFlag = PRIORITY_LOCK;
-                        *tFrame = *rFrame;
-                        clearFrame(rFrame);
-                        tFlag = FLAG_SENDING_PREAMBLE;
-                        pFlag = PRIORITY_RELAY;
-                        break;
-
-                    case MESSAGE_TO_ME: // Message to Me O
-                        printFrame(rFrame);
-                        uart_changeLine();
-                        printMsg("MSG TO ME", 9);
-                        uart_changeLine(); uart_changeLine();
-                        *sFrame = *rFrame;
-                        clearFrame(rFrame);
-                        break;
-
-                    case MESSAGE_TO_ANOTHER: // Message To Another Nodes X
-                        uart_changeLine();
-                        printMsg("TO ANOTHER", 10);
-                        uart_changeLine(); uart_changeLine();
-
-                        /* Message Relay X */
-                        pFlag = PRIORITY_LOCK;
-                        *tFrame = *rFrame;
-                        clearFrame(rFrame);
-                        tFlag = FLAG_SENDING_PREAMBLE;
-                        pFlag = PRIORITY_RELAY;
-                        break;
-                }
-                rFlag = FLAG_DETECTING_PREAMBLE;
                 break;
         }
     }

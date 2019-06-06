@@ -5,14 +5,14 @@
 
 uint8_t checkAddress(const frame_t* frame)
 {
-    uint8_t result = 250;
+    uint8_t result = 0;
+    uint8_t dst = frame->payload[0];
+    uint8_t src = frame->payload[1];
 
-    if(frame->payload[1] == MY_ID)
+    if(src == MY_ID)
     {
-        if(frame->payload[0] == BROADCAST_ID)
-            result = MESSAGE_BROADCAST_FROM_ME;
-        else
-            result = MESSAGE_TURNED_BACK;
+        if(dst == BROADCAST_ID) result = MESSAGE_BROADCAST_FROM_ME;
+        else result = MESSAGE_TURNED_BACK;
     }
 
     else

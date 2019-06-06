@@ -13,7 +13,7 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            20
+#define INTERRUPT_PERIOD            10
 
 /* Priority */
 #define PRIORITY_IDLE               50
@@ -68,6 +68,9 @@ volatile uint32_t rCounter  = 0;
 
 /* RECEIVER */
 uint8_t rQueue[1]           = { 0 };
+
+/* Temp Buffer */
+uint8_t tmpBuffer[4]        = { 0 };
 
 /* Receiver's- and Transmitter's- Packet */
 frame_t* rFrame; frame_t _rFrame;       // Receive Frame
