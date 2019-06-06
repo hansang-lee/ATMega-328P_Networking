@@ -52,9 +52,9 @@ int main()
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
                 
                 while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
-                pFlag = PRIORITY_SEND;
                 break;
 
             case TO_ANOTHER:
@@ -63,9 +63,9 @@ int main()
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
                 
                 while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
-                pFlag = PRIORITY_SEND;
                 break;
 
             case TO_EVERYNODE:
@@ -74,9 +74,9 @@ int main()
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
                 
                 while((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY))
+                pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
-                pFlag = PRIORITY_SEND;
                 break;
 
             default:
