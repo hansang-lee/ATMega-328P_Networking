@@ -1,6 +1,5 @@
 #pragma once
 #include <avr/interrupt.h>
-#include <stdlib.h>
 #include "interrupt.h"
 #include "calc.c"
 #include "uart.c"
@@ -175,7 +174,7 @@ ISR(PCINT2_vect)
 
             // CHECKING CRC
             case FLAG_CHECKING_CRC:
-                if((generateCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
+                if((generateCrc(tmpBuffer, rFrame->payload, *(rFrame->dlc), _polynomial)))
                 {
                     // CHECKING ADDRESS
                     switch(checkAddress(rFrame))
