@@ -6,7 +6,6 @@
 #define TO_ANOTHER      'v'
 #define TO_EVERYNODE    'b'
 
-/* Test3 */
 int main()
 {
     /* Frame Packets Initializing */
@@ -45,13 +44,19 @@ int main()
         switch(uart_receive())
         {
             case TO_NEXT:
+                uart_changeLine();uart_transmit('M');
                 myFrame->payload[0] = 0x09;
+                uart_changeLine();uart_transmit('M');
                 clearBuffer(myFrame->crc, 32);
+                uart_changeLine();uart_transmit('M');
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);                
+                uart_changeLine();uart_transmit('M');
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
+                uart_changeLine();uart_transmit('M');
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
+                uart_changeLine();uart_transmit('M');
                 break;
 
             case TO_ANOTHER:

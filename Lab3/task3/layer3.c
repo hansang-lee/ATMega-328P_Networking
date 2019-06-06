@@ -1,5 +1,4 @@
 #pragma once
-#include <stdlib.h>
 #include "layer3.h"
 #include "calc.c"
 
@@ -11,37 +10,25 @@ uint8_t checkAddress(const frame_t* frame)
 
     if(src == MY_ID)
     {
-        if(dst == BROADCAST_ID) result = MESSAGE_BROADCAST_FROM_ME;
-        else result = MESSAGE_TURNED_BACK;
+        if(dst == BROADCAST_ID) result = MY_BROADCAST;
+        else result = RETURNED;
     }
-
     else
     {
-        // Broadcast Message
-        if(frame->payload[0] == BROADCAST_ID)
-        {
-            result = MESSAGE_BROADCAST;
-        }
-
-        // Message To Me
-        else if(frame->payload[0] == MY_ID)
-        {
-            result = MESSAGE_TO_ME;
-        }
- 
-        // Message To Another Nodes
+        if(dst == BROADCAST_ID)
+            result = BROADCAST;
+        else if(dst == MY_ID)
+            result = MY_MSG;
         else
-        {
-            result = MESSAGE_TO_ANOTHER;
-        } 
+            result = OTHER_MSG;
     }
 
     return result;
 }
 
-void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src)
-{
-    rightShift(frame->payload, size, 2);
-    frame->payload[0] = dst;
-    frame->payload[1] = src;
-}
+//void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src)
+//{
+//    rightShift(frame->payload, size, 2);
+//    frame->payload[0] = dst;
+//    frame->payload[1] = src;
+//}

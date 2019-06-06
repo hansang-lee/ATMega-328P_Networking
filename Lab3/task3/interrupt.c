@@ -179,21 +179,20 @@ ISR(PCINT2_vect)
                     // CHECKING ADDRESS
                     switch(checkAddress(rFrame))
                     {
-                        case MESSAGE_TURNED_BACK: // Message Turned Back
+                        case RETURNED: // Message Turned Back
                             printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
                             clearFrame(rFrame);
                             break;
 
-                        case MESSAGE_BROADCAST_FROM_ME: // Broadcast Message From Me
+                        case MY_BROADCAST: // Broadcast Message From Me
                             break;
 
-                        case MESSAGE_BROADCAST: // Broadcast Message
+                        case BROADCAST: // Broadcast Message
                             printMsg("RECEIVE", 7); uart_changeLine();
                             printFrame(rFrame); uart_changeLine();
                             printMsg("CRC OK ", 7); uart_changeLine();
                             printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
                             *sFrame = *rFrame;
-                            
                             pFlag = PRIORITY_LOCK;
                             *tFrame = *rFrame;
                             clearFrame(rFrame);
@@ -201,7 +200,7 @@ ISR(PCINT2_vect)
                             pFlag = PRIORITY_RELAY;
                             break;
 
-                        case MESSAGE_TO_ME: // Message to Me
+                        case MY_MSG: // Message to Me
                             printMsg("RECEIVE", 7); uart_changeLine();
                             printFrame(rFrame); uart_changeLine();
                             printMsg("CRC OK ", 7); uart_changeLine();
@@ -211,7 +210,7 @@ ISR(PCINT2_vect)
                             clearFrame(rFrame);
                             break;
 
-                        case MESSAGE_TO_ANOTHER: // Message To Another Nodes
+                        case OTHER_MSG: // Message To Another Nodes
                             pFlag = PRIORITY_LOCK;
                             *tFrame = *rFrame;
                             clearFrame(rFrame);
