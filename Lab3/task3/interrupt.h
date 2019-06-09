@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
 /* Turns on LEDs : PB4 and PB5 */
-#define LED_A_TOGGLE()              (PORTB ^= (1 << PB5))
-#define LED_B_TOGGLE()              (PORTB ^= (1 << PB4))
+//#define LED_A_TOGGLE()              (PORTB ^= (1 << PB5))
+//#define LED_B_TOGGLE()              (PORTB ^= (1 << PB4))
 
 /* Send Data Signal : PB2 > PD4 */
 #define SEND_DATA_ONE()             (PORTB |= (1 << PB2))
@@ -50,27 +50,27 @@ typedef struct
 } frame_t;
 
 /* Fixed Variables for Checking */
-const uint8_t _polynomial[5]  = { 0x82, 0x60, 0x8e, 0xdb, 0x80 };
-const uint8_t _preamble[1]    = { 0x7e };
+const uint8_t _polynomial[5] = { 0x82, 0x60, 0x8e, 0xdb, 0x80 };
+const uint8_t _preamble[1] = { 0x7e };
 
 /* Timers for Interrupts */
-volatile uint32_t timerA    = (INTERRUPT_PERIOD/2);
-volatile uint32_t timerB    = 0;
+volatile uint32_t timerA = (INTERRUPT_PERIOD/2);
+volatile uint32_t timerB = 0;
 
 /* Flags */
-volatile uint32_t pFlag     = FLAG_IDLE;
-volatile uint32_t tFlag     = FLAG_IDLE;
-volatile uint32_t rFlag     = FLAG_DETECTING_PREAMBLE;
+volatile uint32_t pFlag = FLAG_IDLE;
+volatile uint32_t tFlag = FLAG_IDLE;
+volatile uint32_t rFlag = FLAG_DETECTING_PREAMBLE;
 
 /* Counters */
-volatile uint32_t tCounter  = 0;
-volatile uint32_t rCounter  = 0;
+volatile uint32_t tCounter = 0;
+volatile uint32_t rCounter = 0;
 
 /* RECEIVER */
-uint8_t rQueue[1]           = { 0 };
+uint8_t rQueue[1] = { 0 };
 
 /* Temp Buffer */
-uint8_t tmpBuffer[4]        = { 0 };
+uint8_t tmpBuffer[4] = { 0 };
 
 /* Receiver's- and Transmitter's- Packet */
 frame_t* rFrame; frame_t _rFrame;       // Receive Frame

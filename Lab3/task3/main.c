@@ -1,10 +1,7 @@
 #include "io.c"
 #include "interrupt.c"
 
-#define ENTER           0x0d
-#define TO_NEXT         'n'
-#define TO_ANOTHER      'v'
-#define TO_EVERYNODE    'b'
+//#define ENTER           0x0d
 
 int main()
 {
@@ -19,7 +16,7 @@ int main()
     rFlag = FLAG_DETECTING_PREAMBLE;
     pFlag = PRIORITY_IDLE;
 
-    /* Already Filled Buffer */
+    /* Pre-Filled Buffer */
     clearFrame(tFrame);
     clearFrame(myFrame);
     clearFrame(rFrame);
@@ -39,27 +36,21 @@ int main()
 	sei();
 
     /* User Input */
-	for (;;)
+	for(;;)
 	{
         switch(uart_receive())
         {
-            case TO_NEXT:
-                uart_changeLine();uart_transmit('M');
+            case 'n':
                 myFrame->payload[0] = 0x09;
-                uart_changeLine();uart_transmit('M');
                 clearBuffer(myFrame->crc, 32);
-                uart_changeLine();uart_transmit('M');
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);                
-                uart_changeLine();uart_transmit('M');
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
-                uart_changeLine();uart_transmit('M');
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
-                uart_changeLine();uart_transmit('M');
                 break;
 
-            case TO_ANOTHER:
+            case 'v':
                 myFrame->payload[0] = 0x01;
                 clearBuffer(myFrame->crc, 32);
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
@@ -69,7 +60,7 @@ int main()
                 tFlag = FLAG_SENDING_PREAMBLE;
                 break;
 
-            case TO_EVERYNODE:
+            case 'b':
                 myFrame->payload[0] = 0x00;
                 clearBuffer(myFrame->crc, 32);
                 generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
@@ -77,9 +68,6 @@ int main()
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
                 tFlag = FLAG_SENDING_PREAMBLE;
-                break;
-
-            default:
                 break;
         }
         _delay_ms(INTERRUPT_PERIOD);

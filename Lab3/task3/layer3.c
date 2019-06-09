@@ -15,12 +15,9 @@ uint8_t checkAddress(const frame_t* frame)
     }
     else
     {
-        if(dst == BROADCAST_ID)
-            result = BROADCAST;
-        else if(dst == MY_ID)
-            result = MY_MSG;
-        else
-            result = OTHER_MSG;
+        if(dst == BROADCAST_ID) result = BROADCAST;
+        else if(dst == MY_ID) result = MY_MSG;
+        else result = OTHER_MSG;
     }
 
     return result;

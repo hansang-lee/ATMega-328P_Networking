@@ -127,110 +127,107 @@ ISR(TIMER0_COMPA_vect)
 /* Pin-Change-Interrupt - Receiver */
 ISR(PCINT2_vect)
 {
-    //if(pFlag == PRIORITY_READ)
+    switch(rFlag)
     {
-        switch(rFlag)
-        {
-            // DETECTING PREAMBLE
-            case FLAG_DETECTING_PREAMBLE:
-                updateBit(rQueue, (rCounter%8), receiveData());
-                if(checkPreamble(*rQueue, *_preamble))
-                {
-                    *rQueue = 0;
-                    rCounter = 0;
-                    rFlag = FLAG_RECEIVING_CRC;
-                }
-                break;
-
-            // RECEIVING CRC
-            case FLAG_RECEIVING_CRC:
-                updateBit(rFrame->crc, rCounter, receiveData());
-                if((++rCounter) >= 32)
-                {
-                    rCounter = 0;
-                    rFlag = FLAG_RECEIVING_DLC;
-                }
-                break;
-
-            // RECEIVING DLC
-            case FLAG_RECEIVING_DLC:
-                updateBit(rFrame->dlc, rCounter, receiveData());
-                if((++rCounter) >= 8)
-                {
-                    rCounter = 0;
-                    rFlag = FLAG_RECEIVING_PAYLOAD;
-                }
-                break;
-
-            // RECEIVING PAYLOAD
-            case FLAG_RECEIVING_PAYLOAD:
-                updateBit(rFrame->payload, rCounter, receiveData());
-                if((++rCounter) >= ((rFrame->dlc[0])*8))
-                {
-                    rCounter = 0;
-                    rFlag = FLAG_CHECKING_CRC;
-                }
-                break;
-
-            // CHECKING CRC
-            case FLAG_CHECKING_CRC:
-                if((generateCrc(tmpBuffer, rFrame->payload, *(rFrame->dlc), _polynomial)))
-                {
-                    // CHECKING ADDRESS
-                    switch(checkAddress(rFrame))
-                    {
-                        case RETURNED: // Message Turned Back
-                            printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
-                            clearFrame(rFrame);
-                            break;
-
-                        case MY_BROADCAST: // Broadcast Message From Me
-                            break;
-
-                        case BROADCAST: // Broadcast Message
-                            printMsg("RECEIVE", 7); uart_changeLine();
-                            printFrame(rFrame); uart_changeLine();
-                            printMsg("CRC OK ", 7); uart_changeLine();
-                            printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
-                            *sFrame = *rFrame;
-                            pFlag = PRIORITY_LOCK;
-                            *tFrame = *rFrame;
-                            clearFrame(rFrame);
-                            tFlag = FLAG_SENDING_PREAMBLE;
-                            pFlag = PRIORITY_RELAY;
-                            break;
-
-                        case MY_MSG: // Message to Me
-                            printMsg("RECEIVE", 7); uart_changeLine();
-                            printFrame(rFrame); uart_changeLine();
-                            printMsg("CRC OK ", 7); uart_changeLine();
-                            printMsg("MESSAGE TO ME", 13);
-                            uart_changeLine(); uart_changeLine();
-                            *sFrame = *rFrame;
-                            clearFrame(rFrame);
-                            break;
-
-                        case OTHER_MSG: // Message To Another Nodes
-                            pFlag = PRIORITY_LOCK;
-                            *tFrame = *rFrame;
-                            clearFrame(rFrame);
-                            tFlag = FLAG_SENDING_PREAMBLE;
-                            pFlag = PRIORITY_RELAY;
-                            break;
-                    }
-                    rFlag = FLAG_DETECTING_PREAMBLE;
-                }
-                else
-                {
-                    printMsg("CRC NO ", 7);
-                    printBit(rFrame->crc, 0, 32);
-                    uart_changeLine(); uart_changeLine();
-                    clearFrame(rFrame);
-                    rFlag = FLAG_DETECTING_PREAMBLE;
-                }
+        // DETECTING PREAMBLE
+        case FLAG_DETECTING_PREAMBLE:
+            updateBit(rQueue, (rCounter%8), receiveData());
+            if(checkPreamble(*rQueue, *_preamble))
+            {
+                *rQueue = 0;
                 rCounter = 0;
-                break;
-        }
+                rFlag = FLAG_RECEIVING_CRC;
+            }
+            break;
+
+        // RECEIVING CRC
+        case FLAG_RECEIVING_CRC:
+            updateBit(rFrame->crc, rCounter, receiveData());
+            if((++rCounter) >= 32)
+            {
+                rCounter = 0;
+                rFlag = FLAG_RECEIVING_DLC;
+            }
+            break;
+
+        // RECEIVING DLC
+        case FLAG_RECEIVING_DLC:
+            updateBit(rFrame->dlc, rCounter, receiveData());
+            if((++rCounter) >= 8)
+            {
+                rCounter = 0;
+                rFlag = FLAG_RECEIVING_PAYLOAD;
+            }
+            break;
+
+        // RECEIVING PAYLOAD
+        case FLAG_RECEIVING_PAYLOAD:
+            updateBit(rFrame->payload, rCounter, receiveData());
+            if((++rCounter) >= ((rFrame->dlc[0])*8))
+            {
+                rCounter = 0;
+                rFlag = FLAG_CHECKING_CRC;
+            }
+            break;
+
+        // CHECKING CRC
+        case FLAG_CHECKING_CRC:
+            if((generateCrc(tmpBuffer, rFrame->payload, *(rFrame->dlc), _polynomial)))
+            {
+                // CHECKING ADDRESS
+                switch(checkAddress(rFrame))
+                {
+                    case RETURNED: // Message Turned Back
+                        printMsg("TURN BACK", 9); uart_changeLine(); uart_changeLine();
+                        clearFrame(rFrame);
+                        break;
+
+                    case MY_BROADCAST: // Broadcast Message From Me
+                        break;
+
+                    case BROADCAST: // Broadcast Message
+                        printMsg("RECEIVE", 7); uart_changeLine();
+                        printFrame(rFrame); uart_changeLine();
+                        printMsg("CRC OK ", 7); uart_changeLine();
+                        printMsg("BROADCAST", 9); uart_changeLine(); uart_changeLine();
+                        *sFrame = *rFrame;
+                        pFlag = PRIORITY_LOCK;
+                        *tFrame = *rFrame;
+                        clearFrame(rFrame);
+                        tFlag = FLAG_SENDING_PREAMBLE;
+                        pFlag = PRIORITY_RELAY;
+                        break;
+
+                    case MY_MSG: // Message to Me
+                        printMsg("RECEIVE", 7); uart_changeLine();
+                        printFrame(rFrame); uart_changeLine();
+                        printMsg("CRC OK ", 7); uart_changeLine();
+                        printMsg("MESSAGE TO ME", 13);
+                        uart_changeLine(); uart_changeLine();
+                        *sFrame = *rFrame;
+                        clearFrame(rFrame);
+                        break;
+
+                    case OTHER_MSG: // Message To Another Nodes
+                        pFlag = PRIORITY_LOCK;
+                        *tFrame = *rFrame;
+                        clearFrame(rFrame);
+                        tFlag = FLAG_SENDING_PREAMBLE;
+                        pFlag = PRIORITY_RELAY;
+                        break;
+                }
+                rFlag = FLAG_DETECTING_PREAMBLE;
+            }
+            else
+            {
+                printMsg("CRC NO ", 7);
+                printBit(rFrame->crc, 0, 32);
+                uart_changeLine(); uart_changeLine();
+                clearFrame(rFrame);
+                rFlag = FLAG_DETECTING_PREAMBLE;
+            }
+            rCounter = 0;
+            break;
     }
 }
 
@@ -240,10 +237,6 @@ ISR(TIMER0_COMPB_vect)
 	if ((timerB++) > INTERRUPT_PERIOD)
 	{
 		timerB = 0;
-        
-        ////////////////////////////////////////////////////////
-		/* CLOCK SIGNAL TRANSMIT */
 		PIN_CHANGE();
-        ////////////////////////////////////////////////////////
 	}
 }

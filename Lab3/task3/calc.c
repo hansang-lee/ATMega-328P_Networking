@@ -11,6 +11,7 @@ void printMsg(const char* msg, const uint8_t length)
     }
 }
 
+/* Print Frame */
 void printFrame(frame_t* frame)
 {
     printMsg("CRC ", 4);
@@ -91,7 +92,7 @@ uint16_t checkPreamble(const uint8_t preambleBuffer, const uint8_t _preamble)
 }
 
 /* Right-Shift Byte by Byte */
-void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
+/*void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
 {
     for(int t=0; t<times; t++)
     {
@@ -105,7 +106,7 @@ void rightShift(uint8_t* bitstring, uint32_t size, uint8_t times)
         }
         bitstring[0] = 0x00;
     }
-}
+}*/
 
 /* Generates CRC from source and copies the result to destination */
 uint8_t generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
@@ -116,7 +117,6 @@ uint8_t generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, c
 
     /* Copies the payload to the temporary variable */
     for(int i=0; i<src_size; i++) {payload[i] = src[i];}
-    //for(int i=src_size; i<(payload_size/8); i++) {payload[i] = 0x00;}
     for(int i=src_size; i<(payload_size/8); i++) {payload[i] = crc[i-src_size];}
 
     /* CRC Calculation */
