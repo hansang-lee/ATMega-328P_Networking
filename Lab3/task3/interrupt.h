@@ -78,7 +78,6 @@ frame_t* tFrame; frame_t _tFrame;       // Transmit Frame
 frame_t* myFrame; frame_t _myFrame;     // User-Input Frame
 frame_t* sFrame; frame_t _sFrame;       // Buffer Frame
 
-/* Implementations */
 void interrupt_setup()
 {
 	TIMSK0 |= (1 << OCIE0A);

@@ -11,4 +11,3 @@
 #define OTHER_MSG       5
 
 uint8_t checkAddress(const frame_t* frame);
-//void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src);

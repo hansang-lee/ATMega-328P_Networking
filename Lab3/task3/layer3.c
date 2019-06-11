@@ -22,10 +22,3 @@ uint8_t checkAddress(const frame_t* frame)
 
     return result;
 }
-
-//void insertAddress(frame_t* frame, uint32_t size, uint8_t dst, uint8_t src)
-//{
-//    rightShift(frame->payload, size, 2);
-//    frame->payload[0] = dst;
-//    frame->payload[1] = src;
-//}

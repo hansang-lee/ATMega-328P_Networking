@@ -115,9 +115,6 @@ ISR(TIMER0_COMPA_vect)
                         pFlag = PRIORITY_IDLE;
                     }
                     break;
-
-                default:
-                    break;
             }
 		    timerA = 0;
         }
@@ -172,7 +169,7 @@ ISR(PCINT2_vect)
 
         // CHECKING CRC
         case FLAG_CHECKING_CRC:
-            if((generateCrc(tmpBuffer, rFrame->payload, *(rFrame->dlc), _polynomial)))
+            if((checkCrc(rFrame->payload, *(rFrame->dlc), _polynomial)))
             {
                 // CHECKING ADDRESS
                 switch(checkAddress(rFrame))
