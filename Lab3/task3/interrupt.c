@@ -169,7 +169,8 @@ ISR(PCINT2_vect)
 
         // CHECKING CRC
         case FLAG_CHECKING_CRC:
-            if((checkCrc(rFrame->payload, *(rFrame->dlc), _polynomial)))
+            //if((checkCrc(rFrame->payload, *(rFrame->dlc), _polynomial)))
+            if((generateCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
             {
                 // CHECKING ADDRESS
                 switch(checkAddress(rFrame))
@@ -218,7 +219,7 @@ ISR(PCINT2_vect)
             else
             {
                 printMsg("CRC NO ", 7);
-                printBit(rFrame->crc, 0, 32);
+                //printBit(rFrame->crc, 0, 32);
                 uart_changeLine(); uart_changeLine();
                 clearFrame(rFrame);
                 rFlag = FLAG_DETECTING_PREAMBLE;

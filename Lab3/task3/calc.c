@@ -109,7 +109,7 @@ uint16_t checkPreamble(const uint8_t preambleBuffer, const uint8_t _preamble)
 }*/
 
 /* Generates CRC from source and copies the result to destination */
-void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
+uint8_t generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     /* This payload will be XOR with polynomial */
     uint32_t payload_size = ((src_size*8) + 32);
@@ -148,22 +148,32 @@ void generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, cons
     }
 
     /* Copies the generated CRC to the destination */
+    uint8_t result = 0;
     for(int i=0; i<4; i++)
+    {
         crc[i] = payload[i];
+        result = crc[i];
+    }
 
     free(payload);
+
+    if(result == 0) return 1;
+    else return 0;
 }
 
 uint8_t checkCrc(const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
-    uint8_t tmpBuf[4] = { 0 };
+    uint8_t tmpBuf[4];
+    clearBuffer(tmpBuf, 32);
+
     generateCrc(tmpBuf, src, src_size, pln);
 
     // Copies the generated CRC to the destination
+    uint8_t result = 0;
     for(int i=0; i<4; i++)
-        tmpBuf[0] += tmpBuf[i];
+        result += tmpBuf[i];
 
-    if(tmpBuf[0] == 0) return 1;
+    if(result == 0) return 1;
     else return 0;
 }
 
