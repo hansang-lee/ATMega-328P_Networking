@@ -4,9 +4,8 @@
  Lab 2- 29 April 2019, Monday 09:15-10:45 \
  Lab 3- 13 May 2019, Monday 09:15-10:45 \
  Lab 4- 27 May 2019, Monday 09:15-10:45 \
- Lab 5- 19 June 2019, Monday 09:15-10:45 \
- Lab 6- 24 June 2019, Monday 09:15-10:45 \
- Lab 7- 8 July 2019, Monday 09:15-10:45
+ Lab 5- 17 June 2019, Monday 09:15-10:45 \
+ Lab 6- 01 July 2019, Monday 09:15-10:45
 
 # Reference Links
 TU Chemnitz Embedded Lab Professorship References \
