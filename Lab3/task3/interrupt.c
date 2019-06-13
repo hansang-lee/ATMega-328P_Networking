@@ -108,7 +108,7 @@ ISR(TIMER0_COMPA_vect)
                     
                     if((++tCounter) >= ((tFrame->dlc[0])*8))
                     {
-                        if(pFlag == PRIORITY_SEND) uart_changeLine(); uart_changeLine();
+                        if(pFlag == PRIORITY_SEND) { uart_changeLine(); uart_changeLine(); }
                         tCounter = 0;
                         clearFrame(tFrame);
                         tFlag = FLAG_IDLE;
