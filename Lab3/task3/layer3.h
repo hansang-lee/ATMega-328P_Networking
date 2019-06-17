@@ -2,7 +2,8 @@
 
 #define BROADCAST_ID    0x00
 #define MY_ID           0x0f
-#define NEXT_ID         0x09
+#define NEXT_ID         0x04
+#define OTHER_ID        0x09
 
 #define RETURNED        1
 #define MY_BROADCAST    2

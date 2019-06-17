@@ -13,7 +13,7 @@
 #define RECEIVED_DATA()             (PIND & (1 << PD4))
 
 /* How often run Interrups? : 1000 = 1s */
-#define INTERRUPT_PERIOD            10
+#define INTERRUPT_PERIOD            1
 
 /* Priority */
 #define PRIORITY_IDLE               50

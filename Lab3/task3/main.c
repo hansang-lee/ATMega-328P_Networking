@@ -40,7 +40,7 @@ int main()
         {
             case 'n':
                 // Test Transmit : To Next
-                myFrame->payload[0] = 0x09;
+                myFrame->payload[0] = NEXT_ID;
                 clearBuffer(myFrame->crc, 32);
                 makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
@@ -50,8 +50,8 @@ int main()
                 break;
 
             case 'v':
-                // Test Transmit : BroadCast
-                myFrame->payload[0] = 0x01;
+                // Test Transmit : To Someone
+                myFrame->payload[0] = OTHER_ID;
                 clearBuffer(myFrame->crc, 32);
                 makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
@@ -61,8 +61,8 @@ int main()
                 break;
 
             case 'b':
-                // Test Transmit : To Someone
-                myFrame->payload[0] = 0x00;
+                // Test Transmit : BroadCast
+                myFrame->payload[0] = BROADCAST_ID;
                 clearBuffer(myFrame->crc, 32);
                 makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
