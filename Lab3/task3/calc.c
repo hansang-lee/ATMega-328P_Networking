@@ -161,7 +161,7 @@ uint8_t generateCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, c
     else return 0;
 }
 
-uint8_t checkCrc(const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
+/*uint8_t checkCrc(const uint8_t* src, const uint32_t src_size, const uint8_t* pln)
 {
     uint8_t tmpBuf[4];
     clearBuffer(tmpBuf, 32);
@@ -175,7 +175,7 @@ uint8_t checkCrc(const uint8_t* src, const uint32_t src_size, const uint8_t* pln
 
     if(result == 0) return 1;
     else return 0;
-}
+}*/
 
 void clearBuffer(uint8_t* bitstring, uint32_t bit_size)
 {

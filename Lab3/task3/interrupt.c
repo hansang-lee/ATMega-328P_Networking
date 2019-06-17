@@ -16,24 +16,10 @@ ISR(TIMER0_COMPA_vect)
             {
                 // SENDING PREAMBLE
                 case FLAG_SENDING_PREAMBLE:
-                    if((pFlag == PRIORITY_SEND) && (tCounter == 0)) 
-                    {
-                        printMsg("TRANSMIT", 8); uart_changeLine(); 
-                        printMsg("PRE ", 4); 
-                    }
-                    if(readBit(_preamble, tCounter)) 
-                    { 
-                        SEND_DATA_ONE(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('1'); 
-                    }
-                    else 
-                    { 
-                        SEND_DATA_ZERO(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('0'); 
-                    }
+                    if(readBit(_preamble, tCounter)) SEND_DATA_ONE(); 
+                    else SEND_DATA_ZERO(); 
                     if((++tCounter) >= 8)
                     { 
-                        if(pFlag == PRIORITY_SEND) uart_changeLine(); 
                         tCounter = 0; 
                         tFlag = FLAG_SENDING_CRC; 
                     }
@@ -41,24 +27,10 @@ ISR(TIMER0_COMPA_vect)
 
                 // SENDING CRC
                 case FLAG_SENDING_CRC:
-                    if(pFlag == PRIORITY_SEND)
-                    {
-                        if((tCounter > 0) && ((tCounter % 8) == 0)) uart_transmit(' ');
-                        if(tCounter == 0) { printMsg("CRC ", 4); }
-                    }
-                    if(readBit(tFrame->crc, tCounter)) 
-                    { 
-                        SEND_DATA_ONE(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('1'); 
-                    }
-                    else 
-                    { 
-                        SEND_DATA_ZERO(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('0'); 
-                    }
+                    if(readBit(tFrame->crc, tCounter)) SEND_DATA_ONE(); 
+                    else SEND_DATA_ZERO(); 
                     if((++tCounter) >= 32)
                     { 
-                        if(pFlag == PRIORITY_SEND) uart_changeLine(); 
                         tCounter = 0; 
                         tFlag = FLAG_SENDING_DLC; 
                     }
@@ -66,20 +38,10 @@ ISR(TIMER0_COMPA_vect)
 
                 // SENDING DLC
                 case FLAG_SENDING_DLC:
-                    if((pFlag == PRIORITY_SEND) && (tCounter == 0)) { printMsg("DLC ", 4); }
-                    if(readBit(tFrame->dlc, tCounter)) 
-                    { 
-                        SEND_DATA_ONE(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('1'); 
-                    }
-                    else 
-                    { 
-                        SEND_DATA_ZERO();
-                        if(pFlag == PRIORITY_SEND) uart_transmit('0');
-                    }
+                    if(readBit(tFrame->dlc, tCounter)) SEND_DATA_ONE();
+                    else SEND_DATA_ZERO(); 
                     if((++tCounter) >= 8)
                     { 
-                        if(pFlag == PRIORITY_SEND) uart_changeLine(); 
                         tCounter = 0; 
                         tFlag = FLAG_SENDING_PAYLOAD; 
                     }
@@ -87,28 +49,16 @@ ISR(TIMER0_COMPA_vect)
 
                 // SENDING PAYLOAD
                 case FLAG_SENDING_PAYLOAD:
-                    if(pFlag == PRIORITY_SEND)
-                    {
-                        if((tCounter > 0) && ((tCounter == 8) || (tCounter == 16))) uart_changeLine();
-                        if((tCounter > 0) && ((tCounter % 8) == 0)) uart_transmit(' ');
-                        if(tCounter == 0) { printMsg("DST ", 4); }
-                        else if(tCounter == 8) { uart_transmit('\r'); printMsg("SRC ", 4); }
-                        else if(tCounter == 16) { uart_transmit('\r'); printMsg("PAY ", 4); }
-                    }
-                    if(readBit(tFrame->payload, tCounter))
-                    { 
-                        SEND_DATA_ONE();
-                        if(pFlag == PRIORITY_SEND) uart_transmit('1'); 
-                    }
-                    else 
-                    { 
-                        SEND_DATA_ZERO(); 
-                        if(pFlag == PRIORITY_SEND) uart_transmit('0'); 
-                    }
-                    
+                    if(readBit(tFrame->payload, tCounter)) SEND_DATA_ONE();
+                    else SEND_DATA_ZERO(); 
                     if((++tCounter) >= ((tFrame->dlc[0])*8))
                     {
-                        if(pFlag == PRIORITY_SEND) { uart_changeLine(); uart_changeLine(); }
+                        if(pFlag == PRIORITY_SEND)
+                        {
+                            printMsg("TRANSMIT", 8); uart_changeLine();
+                            printFrame(tFrame); uart_changeLine(); uart_changeLine();
+                        }
+
                         tCounter = 0;
                         clearFrame(tFrame);
                         tFlag = FLAG_IDLE;
@@ -169,9 +119,10 @@ ISR(PCINT2_vect)
 
         // CHECKING CRC
         case FLAG_CHECKING_CRC:
-            //if((checkCrc(rFrame->payload, *(rFrame->dlc), _polynomial)))
+            for(int i=0; i<4; i++) tmpBuffer[i] = rFrame->crc[i];
             if((generateCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
             {
+                for(int i=0; i<4; i++) rFrame->crc[i] = tmpBuffer[i];
                 // CHECKING ADDRESS
                 switch(checkAddress(rFrame))
                 {
