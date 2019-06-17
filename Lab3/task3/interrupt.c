@@ -119,10 +119,8 @@ ISR(PCINT2_vect)
 
         // CHECKING CRC
         case FLAG_CHECKING_CRC:
-            for(int i=0; i<4; i++) tmpBuffer[i] = rFrame->crc[i];
-            if((generateCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial)))
+            if((makeCrc(rFrame->crc, rFrame->payload, *(rFrame->dlc), _polynomial, CHECK)))
             {
-                for(int i=0; i<4; i++) rFrame->crc[i] = tmpBuffer[i];
                 // CHECKING ADDRESS
                 switch(checkAddress(rFrame))
                 {
@@ -132,6 +130,7 @@ ISR(PCINT2_vect)
                         break;
 
                     case MY_BROADCAST: // Broadcast Message From Me
+                        clearFrame(rFrame);
                         break;
 
                     case BROADCAST: // Broadcast Message
@@ -170,7 +169,6 @@ ISR(PCINT2_vect)
             else
             {
                 printMsg("CRC NO ", 7);
-                //printBit(rFrame->crc, 0, 32);
                 uart_changeLine(); uart_changeLine();
                 clearFrame(rFrame);
                 rFlag = FLAG_DETECTING_PREAMBLE;

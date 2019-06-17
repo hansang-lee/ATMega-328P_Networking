@@ -69,9 +69,6 @@ volatile uint32_t rCounter = 0;
 /* RECEIVER */
 uint8_t rQueue[1] = { 0 };
 
-/* Temp Buffer */
-uint8_t tmpBuffer[4] = { 0 };
-
 /* Receiver's- and Transmitter's- Packet */
 frame_t* rFrame; frame_t _rFrame;       // Receive Frame
 frame_t* tFrame; frame_t _tFrame;       // Transmit Frame

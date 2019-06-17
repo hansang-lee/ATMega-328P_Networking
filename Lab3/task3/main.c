@@ -1,8 +1,6 @@
 #include "io.c"
 #include "interrupt.c"
 
-//#define ENTER           0x0d
-
 int main()
 {
     /* Frame Packets Initializing */
@@ -20,12 +18,12 @@ int main()
     clearFrame(tFrame);
     clearFrame(myFrame);
     clearFrame(rFrame);
-    myFrame->dlc[0]     = 0x06; // Payload Size : 0000 0110
-    myFrame->payload[1] = 0x0f; // Source       : 0000 1111
-    myFrame->payload[2] = 0x74; // 0111 0100
-    myFrame->payload[3] = 0x65; // 0110 0101
-    myFrame->payload[4] = 0x73; // 0111 0011
-    myFrame->payload[5] = 0x74; // 0111 0100
+    myFrame->dlc[0]     = 0x06;
+    myFrame->payload[1] = 0x0f;
+    myFrame->payload[2] = 0x74;
+    myFrame->payload[3] = 0x65;
+    myFrame->payload[4] = 0x73;
+    myFrame->payload[5] = 0x74;
 
     /* Interrupts Initializing */
 	io_init();
@@ -41,9 +39,10 @@ int main()
         switch(uart_receive())
         {
             case 'n':
+                // Test Transmit : To Next
                 myFrame->payload[0] = 0x09;
                 clearBuffer(myFrame->crc, 32);
-                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);                
+                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
@@ -51,9 +50,10 @@ int main()
                 break;
 
             case 'v':
+                // Test Transmit : BroadCast
                 myFrame->payload[0] = 0x01;
                 clearBuffer(myFrame->crc, 32);
-                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
+                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
@@ -61,9 +61,10 @@ int main()
                 break;
 
             case 'b':
+                // Test Transmit : To Someone
                 myFrame->payload[0] = 0x00;
                 clearBuffer(myFrame->crc, 32);
-                generateCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial);
+                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
                 while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
                 pFlag = PRIORITY_SEND;
                 *tFrame = *myFrame;
