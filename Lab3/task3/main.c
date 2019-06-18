@@ -1,6 +1,9 @@
 #include "io.c"
 #include "interrupt.c"
 
+#define INPUT   'a'
+#define ENTER   0x0d
+
 int main()
 {
     /* Frame Packets Initializing */
@@ -34,43 +37,43 @@ int main()
 	sei();
 
     /* User Input */
-	for(;;)
+    uint8_t input = 0;
+    for(;;)
 	{
-        switch(uart_receive())
+        // Press 'a' : Set Input Mode
+        if(uart_receive() == INPUT)
         {
-            case 'n':
-                // Test Transmit : To Next
-                myFrame->payload[0] = NEXT_ID;
-                clearBuffer(myFrame->crc, 32);
-                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
-                while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
-                pFlag = PRIORITY_SEND;
-                *tFrame = *myFrame;
-                tFlag = FLAG_SENDING_PREAMBLE;
-                break;
-
-            case 'v':
-                // Test Transmit : To Someone
-                myFrame->payload[0] = OTHER_ID;
-                clearBuffer(myFrame->crc, 32);
-                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
-                while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
-                pFlag = PRIORITY_SEND;
-                *tFrame = *myFrame;
-                tFlag = FLAG_SENDING_PREAMBLE;
-                break;
-
-            case 'b':
-                // Test Transmit : BroadCast
-                myFrame->payload[0] = BROADCAST_ID;
-                clearBuffer(myFrame->crc, 32);
-                makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
-                while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
-                pFlag = PRIORITY_SEND;
-                *tFrame = *myFrame;
-                tFlag = FLAG_SENDING_PREAMBLE;
-                break;
-        }
+            myFrame->payload[0] = 0x00;
+            printMsg("DESTINATION : ", 14);
+            
+            // Press Numbers : Type Address
+            while(1)
+            {
+                input = uart_receive();
+                uart_transmit((char)input);
+                if(input == ENTER) break;
+                else 
+                {
+                    // Press 'Backspace' : Initialize Input Mode
+                    if((input == 0x7f) || (input == 0x08))
+					{
+						myFrame->payload[0] = 0x00;
+						uart_transmit('\r'); printMsg("DESTINATION :    ", 17);
+						uart_transmit('\r'); printMsg("DESTINATION : ", 14);
+					}
+                    else
+                    {
+						myFrame->payload[0] = ((myFrame->payload[0] * 10) + (((uint8_t)input)-48));
+                    }
+                }
+            }
+			clearBuffer(myFrame->crc, 32);
+			makeCrc(myFrame->crc, myFrame->payload, myFrame->dlc[0], _polynomial, GENERATE);
+			while(((pFlag == PRIORITY_LOCK) || (pFlag == PRIORITY_SEND) || (pFlag == PRIORITY_RELAY)));
+			pFlag = PRIORITY_SEND;
+			*tFrame = *myFrame;
+			tFlag = FLAG_SENDING_PREAMBLE;
+		}
         _delay_ms(INTERRUPT_PERIOD);
 	}
 }

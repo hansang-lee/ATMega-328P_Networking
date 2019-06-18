@@ -130,14 +130,16 @@ uint8_t makeCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const
         }
     }
 
-    /* Copies the generated CRC to the destination */
     uint8_t result = 0;
     for(int i=0; i<4; i++)
     {
-        // 0 : generate
-        // 1 : check
-        if(flag == 0) crc[i] = payload[i];
-        result = payload[i];
+        /* Generate Mode */
+        if(flag == 0)
+            crc[i] = payload[i];
+        
+        /* Check Mode */
+        else if(flag == 1)
+            result = payload[i];
     }
 
     free(payload);
