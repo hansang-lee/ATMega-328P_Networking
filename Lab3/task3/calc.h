@@ -13,3 +13,4 @@ void printBit(const uint8_t* buffer, const uint32_t from, const uint32_t to);
 uint16_t checkPreamble(const uint8_t preambleBuffer, const uint8_t _preamble);
 uint8_t makeCrc(uint8_t* crc, const uint8_t* src, const uint32_t src_size, const uint8_t* pln, const uint8_t flag);
 void clearBuffer(uint8_t* bitstring, uint32_t bit_size);
+void clearFrame(frame_t* frame);

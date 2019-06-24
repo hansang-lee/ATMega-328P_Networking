@@ -155,3 +155,10 @@ void clearBuffer(uint8_t* bitstring, uint32_t bit_size)
         bitstring[i] = 0x00;
     }
 }
+
+void clearFrame(frame_t* frame)
+{
+    for(int i=0; i<4; i++) {frame->crc[i] = 0x00;}
+    frame->dlc[0] = 0x00;
+    for(int i=0; i<251; i++) {frame->payload[i] = 0x00;}
+}

@@ -74,25 +74,3 @@ frame_t* rFrame; frame_t _rFrame;       // Receive Frame
 frame_t* tFrame; frame_t _tFrame;       // Transmit Frame
 frame_t* myFrame; frame_t _myFrame;     // User-Input Frame
 frame_t* sFrame; frame_t _sFrame;       // Buffer Frame
-
-void interrupt_setup()
-{
-	TIMSK0 |= (1 << OCIE0A);
-	TIMSK0 |= (1 << OCIE0B);
-	TCCR0A |= (1 << WGM01);
-	TCCR0B |= (1 << CS02);
-    OCR0A = 0x2f;
-}
-
-void pin_change_setup()
-{
-	PCMSK2 |= (1 << PCINT19);
-	PCICR |= (1 << PCIE2);
-}
-
-void clearFrame(frame_t* frame)
-{
-    for(int i=0; i<4; i++) {frame->crc[i] = 0x00;}
-    frame->dlc[0] = 0x00;
-    for(int i=0; i<251; i++) {frame->payload[i] = 0x00;}
-}

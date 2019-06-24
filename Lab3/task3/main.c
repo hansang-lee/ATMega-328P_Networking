@@ -1,4 +1,4 @@
-#include "io.c"
+#include "init.c"
 #include "interrupt.c"
 
 #define INPUT   'a'
@@ -58,7 +58,7 @@ int main()
                     if((input == 0x7f) || (input == 0x08))
 					{
 						myFrame->payload[0] = 0x00;
-						uart_transmit('\r'); printMsg("DESTINATION :    ", 17);
+						uart_transmit('\r'); printMsg("DESTINATION :       ", 20);
 						uart_transmit('\r'); printMsg("DESTINATION : ", 14);
 					}
                     else
