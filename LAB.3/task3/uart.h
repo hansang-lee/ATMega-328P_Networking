@@ -6,7 +6,6 @@
 #include <util/setbaud.h>
 #include <util/delay.h>
 
-/* UART serial communication */
 void uart_init(unsigned long);
 void uart_transmit(unsigned char);
 unsigned char uart_receive(void);

@@ -1,26 +1,25 @@
 #include "init.c"
 #include "interrupt.c"
 
-#define INPUT   'a'
-#define ENTER   0x0d
-
 int main()
 {
-    /* Frame Packets Initializing */
+    /// Initializes Frame Packets
     rFrame = &_rFrame;
     tFrame = &_tFrame;
     myFrame = &_myFrame;
     sFrame = &_sFrame;
 
-    /* Flags Initializing */
+    /// Initializes flag variables
     tFlag = FLAG_IDLE;
     rFlag = FLAG_DETECTING_PREAMBLE;
     pFlag = PRIORITY_IDLE;
 
-    /* Pre-Filled Buffer */
+    /// Initializes Packets
     clearFrame(tFrame);
     clearFrame(myFrame);
     clearFrame(rFrame);
+
+    /// Pre-defined Packet without Destination-Address
     myFrame->dlc[0]     = 0x06;
     myFrame->payload[1] = 0x0f;
     myFrame->payload[2] = 0x74;
@@ -28,7 +27,7 @@ int main()
     myFrame->payload[4] = 0x73;
     myFrame->payload[5] = 0x74;
 
-    /* Interrupts Initializing */
+    /// Initializes Interrupts
 	io_setup();
 	cli();
 	uart_init(MYUBRR);
@@ -36,25 +35,28 @@ int main()
 	pin_change_setup();
 	sei();
 
-    /* User Input */
+    /// User-Input
     uint8_t input = 0;
     for(;;)
 	{
-        // Press 'a' : Set Input Mode
-        if(uart_receive() == INPUT)
+        /// Sets Input Mode by pressing alphabet 'a'
+        if(uart_receive() == 'a')
         {
             myFrame->payload[0] = 0x00;
             printMsg("DESTINATION : ", 14);
             
-            // Press Numbers : Type Address
             while(1)
             {
                 input = uart_receive();
                 uart_transmit((char)input);
-                if(input == ENTER) break;
+
+                /// Finalizes the Destination-Address through user-input by pressing 'Enter'
+                if(input == 0x0d) 
+                    break;
+
                 else 
                 {
-                    // Press 'Backspace' : Initialize Input Mode
+                    /// Initializes the written numbers by pressing 'Backspace'
                     if((input == 0x7f) || (input == 0x08))
 					{
 						myFrame->payload[0] = 0x00;
