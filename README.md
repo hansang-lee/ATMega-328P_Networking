@@ -1,12 +1,12 @@
 # Note
 Embedded Lab at Technische Universität Chemnitz in Summer Semester 2019. \
 SS19 Embedded-Lab Praktikum- TimeTable \
-\t 1th-Lab: 15 April 2019, Monday 09:15-10:45 \
-2nd-Lab: 29 April 2019, Monday 09:15-10:45 \
-3rd-Lab: 13 May 2019, Monday 09:15-10:45 \
-4th-Lab: 27 May 2019, Monday 09:15-10:45 \
-5th-Lab: 17 June 2019, Monday 09:15-10:45 \
-6th-Lab: 01 July 2019, Monday 09:15-10:45
+  1th-Lab: 15 April 2019, Monday 09:15-10:45 \
+  2nd-Lab: 29 April 2019, Monday 09:15-10:45 \
+  3rd-Lab: 13 May 2019, Monday 09:15-10:45 \
+  4th-Lab: 27 May 2019, Monday 09:15-10:45 \
+  5th-Lab: 17 June 2019, Monday 09:15-10:45 \
+  6th-Lab: 01 July 2019, Monday 09:15-10:45
 
 # Reference Links
 TU Chemnitz Embedded Lab Professorship References \
