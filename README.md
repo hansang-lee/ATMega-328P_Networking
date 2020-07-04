@@ -1,4 +1,5 @@
-# Embedded-Lab
+# Note
+Embedded Lab at Technische Universität Chemnitz in Summber Semester 2019. \
  SS19 Embedded-Lab Praktikum- TimeTable \
  Lab 1- 15 April 2019, Monday 09:15-10:45 \
  Lab 2- 29 April 2019, Monday 09:15-10:45 \
